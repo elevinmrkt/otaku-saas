@@ -179,7 +179,7 @@ export default function TrailModulesEditor({ trailId, initialModules, allContent
               key={mod.id}
               style={{
                 background: 'var(--card)', border: '1px solid var(--border)',
-                borderRadius: 'var(--r)', overflow: 'hidden',
+                borderRadius: 'var(--r)',
               }}
             >
               {/* Module header */}
