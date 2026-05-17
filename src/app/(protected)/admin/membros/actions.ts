@@ -44,7 +44,7 @@ export async function deleteMemberAction(memberId: string): Promise<string | nul
 }
 
 export async function resendInviteAction(email: string): Promise<string | null> {
-  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+  const { error } = await admin.auth.resetPasswordForEmail(email, {
     redirectTo: 'https://otaku-saas.vercel.app/atualizar-senha',
   })
   if (error) return error.message
