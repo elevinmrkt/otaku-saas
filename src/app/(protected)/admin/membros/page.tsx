@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { Search } from 'lucide-react'
 import MemberActions from '@/components/admin/MemberActions'
+import AddMemberModal from '@/components/admin/AddMemberModal'
 
 export default async function AdminMembros({
   searchParams,
@@ -18,11 +19,14 @@ export default async function AdminMembros({
 
   return (
     <div style={{ maxWidth: '1000px' }}>
-      <div style={{ marginBottom: '2rem' }}>
-        <span className="label">Gestão</span>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', letterSpacing: '0.04em', color: 'var(--text)' }}>
-          Membros
-        </h1>
+      <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+        <div>
+          <span className="label">Gestão</span>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', letterSpacing: '0.04em', color: 'var(--text)' }}>
+            Membros
+          </h1>
+        </div>
+        <AddMemberModal />
       </div>
 
       <form method="GET" style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
