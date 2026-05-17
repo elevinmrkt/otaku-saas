@@ -21,7 +21,7 @@ export default function LoginPage() {
     const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
 
     if (authError) {
-      setError('E-mail ou senha inválidos. Verifique seus dados.')
+      setError(`${authError.message} [url:${process.env.NEXT_PUBLIC_SUPABASE_URL?.slice(8,30) ?? 'UNDEFINED'}]`)
       setLoading(false)
       return
     }
