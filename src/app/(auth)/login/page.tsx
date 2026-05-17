@@ -1,34 +1,26 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import { loginAction } from './actions'
 
 export default function LoginPage() {
-  const router = useRouter()
-  const supabase = createClient()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
     setLoading(true)
-
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
-
-    if (authError) {
+    const form = new FormData(e.currentTarget)
+    const result = await loginAction(
+      form.get('email') as string,
+      form.get('password') as string
+    )
+    if (result) {
       setError('E-mail ou senha inválidos. Verifique seus dados.')
       setLoading(false)
-      return
     }
-
-    await supabase.from('users').update({ last_login_at: new Date().toISOString() }).eq('id', (await supabase.auth.getUser()).data.user!.id)
-    router.push('/home')
-    router.refresh()
   }
 
   return (
@@ -63,12 +55,7 @@ export default function LoginPage() {
         }}
       >
         <div style={{ marginBottom: '2rem' }}>
-          <div
-            style={{
-              display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-              marginBottom: '1.5rem',
-            }}
-          >
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
             <span
               style={{
                 width: '36px', height: '36px',
@@ -106,9 +93,8 @@ export default function LoginPage() {
           <label className="field">
             E-mail
             <input
+              name="email"
               type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
               placeholder="voce@email.com"
               autoComplete="email"
               required
@@ -117,9 +103,8 @@ export default function LoginPage() {
           <label className="field">
             Senha
             <input
+              name="password"
               type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
               placeholder="Sua senha"
               autoComplete="current-password"
               required
