@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, BookOpen, Film, FileText, Headphones,
-  Map, BookMarked, Flame, Users2, Calendar, Trophy, Bell, BarChart2, Tag
+  Map, BookMarked, Flame, Users2, Calendar, Trophy, Bell, BarChart2, Tag, Settings
 } from 'lucide-react'
 import type { UserRole } from '@/types/database'
 
@@ -28,6 +28,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: '/admin/gamificacao', label: 'Gamificação', icon: <Trophy size={16} />, roles: ['admin'] },
   { href: '/admin/notificacoes', label: 'Notificações', icon: <Bell size={16} />, roles: ['admin', 'editor'] },
   { href: '/admin/metricas', label: 'Métricas', icon: <BarChart2 size={16} />, roles: ['admin'] },
+  { href: '/admin/configuracoes', label: 'Configurações', icon: <Settings size={16} />, roles: ['admin'] },
 ]
 
 export default function AdminSidebar({ role }: { role: UserRole }) {
