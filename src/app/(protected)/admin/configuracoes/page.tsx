@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Save, Youtube } from 'lucide-react'
+import { Save, Play } from 'lucide-react'
 
 export default function AdminConfiguracoes() {
   const supabase = createClient()
@@ -28,16 +28,21 @@ export default function AdminConfiguracoes() {
     e.preventDefault()
     setSaving(true)
     setSaved(false)
-    const payload = {
-      youtube_video_id: videoId.trim(),
-      title: videoTitle.trim() || null,
-      comment_min_length: minChars,
-      updated_at: new Date().toISOString(),
-    }
     if (configId) {
-      await supabase.from('welcome_video_config').update(payload).eq('id', configId)
+      await supabase.from('welcome_video_config').update({
+        youtube_video_id: videoId.trim(),
+        title: videoTitle.trim() || null,
+        comment_min_length: minChars,
+        updated_at: new Date().toISOString(),
+      } as any).eq('id', configId)
     } else {
-      const { data } = await supabase.from('welcome_video_config').insert(payload).select('id').single()
+      const { data } = await supabase.from('welcome_video_config').insert({
+        youtube_video_id: videoId.trim(),
+        title: videoTitle.trim() || null,
+        comment_min_length: minChars,
+        min_completion_percent: 80,
+        requires_comment: true,
+      } as any).select('id').single()
       if (data) setConfigId(data.id)
     }
     setSaving(false)
@@ -62,7 +67,7 @@ export default function AdminConfiguracoes() {
       {/* Vídeo de boas-vindas */}
       <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '1.5rem', marginBottom: '1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem' }}>
-          <Youtube size={16} color="var(--red)" />
+          <Play size={16} color="var(--red)" />
           <strong style={{ fontSize: '0.95rem' }}>Vídeo de boas-vindas</strong>
         </div>
         <p style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '1.25rem', lineHeight: 1.6 }}>
