@@ -96,17 +96,19 @@ export default function ConteudoPage() {
         reference_type: 'content_item',
         reference_id: item.id,
       })
-      await (supabase as any).rpc('increment_user_xp', { p_user_id: userId, p_xp: item.xp_reward })
-        .catch(() => {
-          supabase.from('user_xp_summary').upsert({
-            user_id: userId,
-            total_xp: item.xp_reward,
-            level: 1,
-            current_streak: 0,
-            last_activity_at: now,
-            updated_at: now,
-          }, { onConflict: 'user_id' })
-        })
+      const { error: rpcErr } = await (supabase as any).rpc('increment_user_xp', { p_user_id: userId, p_xp: item.xp_reward })
+      if (rpcErr) {
+        // fallback: read current XP then update
+        const { data: existing } = await supabase.from('user_xp_summary').select('total_xp').eq('user_id', userId).single()
+        await supabase.from('user_xp_summary').upsert({
+          user_id: userId,
+          total_xp: (existing?.total_xp ?? 0) + item.xp_reward,
+          level: 1,
+          current_streak: 0,
+          last_activity_at: now,
+          updated_at: now,
+        }, { onConflict: 'user_id' })
+      }
     }
 
     setCompleted(true)
@@ -209,14 +211,31 @@ export default function ConteudoPage() {
         )}
 
         {/* Áudio */}
-        {audioAsset?.url && (
-          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '1.5rem', marginBottom: '2rem' }}>
-            <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-              Player de áudio
-            </p>
-            <audio controls src={audioAsset.url} style={{ width: '100%' }} />
-          </div>
-        )}
+        {audioAsset?.url && (() => {
+          const isSpotify = audioAsset.url.includes('spotify.com')
+          const spotifyEmbed = isSpotify
+            ? audioAsset.url.replace('open.spotify.com/', 'open.spotify.com/embed/').replace('/intl-pt/', '/').split('?')[0]
+            : null
+          return (
+            <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '1.5rem', marginBottom: '2rem' }}>
+              <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                Player de áudio
+              </p>
+              {isSpotify ? (
+                <iframe
+                  src={spotifyEmbed!}
+                  width="100%"
+                  height="152"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                  style={{ border: 'none', borderRadius: '12px' }}
+                />
+              ) : (
+                <audio controls src={audioAsset.url} style={{ width: '100%' }} />
+              )}
+            </div>
+          )
+        })()}
 
         {/* Artigo / Página */}
         {pageAsset?.url && (
