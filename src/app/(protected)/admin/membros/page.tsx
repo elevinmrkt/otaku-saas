@@ -101,7 +101,7 @@ export default async function AdminMembros({
                 >
                   {m.status}
                 </span>
-                <MemberActions memberId={m.id} currentStatus={m.status} currentRole={m.role} />
+                <MemberActions memberId={m.id} memberEmail={m.email} currentStatus={m.status} currentRole={m.role} />
               </div>
             </div>
           ))}

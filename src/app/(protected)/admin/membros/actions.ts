@@ -15,16 +15,38 @@ export async function createMemberAction(formData: FormData): Promise<string | n
   const name = (formData.get('name') as string).trim()
   const role = (formData.get('role') as string) || 'membro'
 
-  // Send invite email (Supabase creates the user + sends the invite link)
   const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { name },
     redirectTo: 'https://otaku-saas.vercel.app/atualizar-senha',
   })
   if (inviteErr) return inviteErr.message
 
-  // Update profile with name and role
   await admin.from('users').update({ name, role }).eq('id', invited.user.id)
 
   revalidatePath('/admin/membros')
+  return null
+}
+
+export async function deleteMemberAction(memberId: string): Promise<string | null> {
+  // Delete profile data first (cascade may handle this, but explicit is safer)
+  await admin.from('content_progress').delete().eq('user_id', memberId)
+  await admin.from('comments').delete().eq('user_id', memberId)
+  await admin.from('gamification_events').delete().eq('user_id', memberId)
+  await admin.from('user_xp_summary').delete().eq('user_id', memberId)
+  await admin.from('users').delete().eq('id', memberId)
+
+  // Delete from Supabase Auth (removes login access and email)
+  const { error } = await admin.auth.admin.deleteUser(memberId)
+  if (error) return error.message
+
+  revalidatePath('/admin/membros')
+  return null
+}
+
+export async function resendInviteAction(email: string): Promise<string | null> {
+  const { error } = await admin.auth.admin.inviteUserByEmail(email, {
+    redirectTo: 'https://otaku-saas.vercel.app/atualizar-senha',
+  })
+  if (error) return error.message
   return null
 }
