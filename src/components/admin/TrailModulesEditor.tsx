@@ -286,12 +286,12 @@ export default function TrailModulesEditor({ trailId, initialModules, allContent
                 ))}
 
                 {/* Search to add content */}
-                <div style={{ marginTop: '0.75rem', position: 'relative' }}>
+                <div style={{ marginTop: '0.75rem', position: 'relative', width: '100%' }}>
                   <div style={{
                     display: 'flex', alignItems: 'center', gap: '0.5rem',
                     background: 'var(--bg-2)', border: '1px solid var(--border)',
                     borderRadius: '8px', padding: '0.4rem 0.85rem',
-                    transition: 'border-color 150ms',
+                    transition: 'border-color 150ms', width: '100%', boxSizing: 'border-box',
                   }}>
                     <Search size={13} color="var(--muted)" style={{ flexShrink: 0 }} />
                     <input
