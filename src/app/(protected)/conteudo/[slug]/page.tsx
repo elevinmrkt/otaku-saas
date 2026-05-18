@@ -5,7 +5,12 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { ContentItemWithAssets } from '@/types/database'
 import { CheckCircle, ArrowLeft, Zap } from 'lucide-react'
-import DOMPurify from 'isomorphic-dompurify'
+function sanitizeHtml(html: string): string {
+  return html
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/\son\w+\s*=\s*(?:"[^"]*"|'[^']*'|[^\s>]*)/gi, '')
+    .replace(/href\s*=\s*["']?\s*javascript:[^"'\s>]*/gi, '')
+}
 
 export default function ConteudoPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -242,7 +247,7 @@ export default function ConteudoPage() {
         {pageAsset?.url && (
           <div
             className="article-body"
-            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(pageAsset.url) }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(pageAsset.url) }}
             style={{ marginBottom: '2rem', padding: '2rem', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r)' }}
           />
         )}
