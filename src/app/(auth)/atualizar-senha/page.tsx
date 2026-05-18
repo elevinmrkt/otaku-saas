@@ -18,24 +18,33 @@ export default function AtualizarSenhaPage() {
     let sub: { unsubscribe: () => void } | null = null
 
     async function initSession() {
-      // Exchange PKCE code if present in URL
       const params = new URLSearchParams(window.location.search)
       const code = params.get('code')
+      const tokenHash = params.get('token_hash')
+      const type = params.get('type')
+
+      // Debug: log URL params to console
+      console.log('[atualizar-senha] params:', { code: !!code, tokenHash: !!tokenHash, type, hash: window.location.hash.slice(0, 30) })
+
       if (code) {
-        await supabase.auth.exchangeCodeForSession(code)
-        // Clean code from URL without reload
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        console.log('[atualizar-senha] exchangeCode error:', error?.message)
+        window.history.replaceState({}, '', window.location.pathname)
+      } else if (tokenHash && type) {
+        const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type as any })
+        console.log('[atualizar-senha] verifyOtp error:', error?.message)
         window.history.replaceState({}, '', window.location.pathname)
       }
 
-      // Check session (covers PKCE + cookie-based flows)
       const { data: { session } } = await supabase.auth.getSession()
+      console.log('[atualizar-senha] session after verify:', !!session)
       if (session) {
         setSessionReady(true)
         return
       }
 
-      // Fallback: hash-based tokens (Supabase implicit flow)
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, sess) => {
+        console.log('[atualizar-senha] authStateChange:', event, !!sess)
         if (sess && (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN')) {
           setSessionReady(true)
           subscription.unsubscribe()
