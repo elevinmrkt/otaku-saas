@@ -35,12 +35,9 @@ export default function AtualizarSenhaPage() {
       const accessToken = hashParams.get('access_token')
       const refreshToken = hashParams.get('refresh_token')
 
-      console.log('[senha] URL params:', { code: !!code, tokenHash: !!tokenHash, type, hasHash: hash.length > 0, accessToken: !!accessToken })
-
       // Case 1: tokens in URL hash (implicit flow)
       if (accessToken && refreshToken) {
         const { error: e } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
-        console.log('[senha] setSession:', e?.message ?? 'ok')
         window.history.replaceState({}, '', window.location.pathname)
         if (!e) { setSessionReady(true); return }
       }
@@ -48,7 +45,6 @@ export default function AtualizarSenhaPage() {
       // Case 2: OTP token_hash
       if (tokenHash) {
         const { error: e } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type as any })
-        console.log('[senha] verifyOtp:', e?.message ?? 'ok')
         window.history.replaceState({}, '', window.location.pathname)
         if (!e) { setSessionReady(true); return }
       }
@@ -56,19 +52,16 @@ export default function AtualizarSenhaPage() {
       // Case 3: PKCE code
       if (code) {
         const { error: e } = await supabase.auth.exchangeCodeForSession(code)
-        console.log('[senha] exchangeCode:', e?.message ?? 'ok')
         window.history.replaceState({}, '', window.location.pathname)
         if (!e) { setSessionReady(true); return }
       }
 
       // Case 4: session already in cookies
       const { data: { session } } = await supabase.auth.getSession()
-      console.log('[senha] getSession:', !!session)
       if (session) { setSessionReady(true); return }
 
       // Case 5: wait for detectSessionInUrl to fire
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, sess) => {
-        console.log('[senha] authChange:', event, !!sess)
         if (sess && (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN')) {
           setSessionReady(true)
           subscription.unsubscribe()
