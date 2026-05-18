@@ -2,18 +2,30 @@
 
 import { createClient as createSupabaseAdmin } from '@supabase/supabase-js'
 import { revalidatePath } from 'next/cache'
+import { requireRole } from '@/lib/auth/requireRole'
 
 const SUPABASE_URL = 'https://mdamossubweuqntwsblp.supabase.co'
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kYW1vc3N1YndldXFudHdzYmxwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODkyODQ1MCwiZXhwIjoyMDk0NTA0NDUwfQ.QY9HSHQu2Y3wsiQVFWvyDf2Q1n5E7U8aVuBpT2dfVSk'
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
 const admin = createSupabaseAdmin(SUPABASE_URL, SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
+function validateEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254
+}
+
 export async function createMemberAction(formData: FormData): Promise<string | null> {
-  const email = (formData.get('email') as string).trim().toLowerCase()
-  const name = (formData.get('name') as string).trim()
+  try { await requireRole(['admin', 'suporte']) } catch (e: any) { return e.message }
+
+  const email = (formData.get('email') as string ?? '').trim().toLowerCase()
+  const name = (formData.get('name') as string ?? '').trim()
   const role = (formData.get('role') as string) || 'membro'
+
+  if (!validateEmail(email)) return 'E-mail inválido.'
+  if (!name || name.length < 2 || name.length > 100) return 'Nome inválido (2–100 caracteres).'
+  const allowedRoles = ['membro', 'mentor', 'editor', 'suporte', 'admin']
+  if (!allowedRoles.includes(role)) return 'Papel inválido.'
 
   const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { name },
@@ -28,14 +40,18 @@ export async function createMemberAction(formData: FormData): Promise<string | n
 }
 
 export async function deleteMemberAction(memberId: string): Promise<string | null> {
-  // Delete profile data first (cascade may handle this, but explicit is safer)
+  try { await requireRole(['admin']) } catch (e: any) { return e.message }
+
+  if (!memberId || typeof memberId !== 'string' || memberId.length !== 36) {
+    return 'ID inválido.'
+  }
+
   await admin.from('content_progress').delete().eq('user_id', memberId)
   await admin.from('comments').delete().eq('user_id', memberId)
   await admin.from('gamification_events').delete().eq('user_id', memberId)
   await admin.from('user_xp_summary').delete().eq('user_id', memberId)
   await admin.from('users').delete().eq('id', memberId)
 
-  // Delete from Supabase Auth (removes login access and email)
   const { error } = await admin.auth.admin.deleteUser(memberId)
   if (error) return error.message
 
@@ -44,6 +60,10 @@ export async function deleteMemberAction(memberId: string): Promise<string | nul
 }
 
 export async function resendInviteAction(email: string): Promise<string | null> {
+  try { await requireRole(['admin', 'suporte']) } catch (e: any) { return e.message }
+
+  if (!validateEmail(email)) return 'E-mail inválido.'
+
   const { error } = await admin.auth.resetPasswordForEmail(email, {
     redirectTo: 'https://otaku-saas.vercel.app/atualizar-senha',
   })

@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { ContentItemWithAssets } from '@/types/database'
 import { CheckCircle, ArrowLeft, Zap } from 'lucide-react'
+import DOMPurify from 'isomorphic-dompurify'
 
 export default function ConteudoPage() {
   const { slug } = useParams<{ slug: string }>()
@@ -241,7 +242,7 @@ export default function ConteudoPage() {
         {pageAsset?.url && (
           <div
             className="article-body"
-            dangerouslySetInnerHTML={{ __html: pageAsset.url }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(pageAsset.url) }}
             style={{ marginBottom: '2rem', padding: '2rem', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r)' }}
           />
         )}

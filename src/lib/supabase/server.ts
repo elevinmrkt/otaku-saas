@@ -23,6 +23,6 @@ export async function createClient() {
 
 export async function createServiceClient() {
   const cookieStore = await cookies()
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1kYW1vc3N1YndldXFudHdzYmxwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODkyODQ1MCwiZXhwIjoyMDk0NTA0NDUwfQ.QY9HSHQu2Y3wsiQVFWvyDf2Q1n5E7U8aVuBpT2dfVSk'
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
   return createServerClient<Database>(SUPABASE_URL, serviceKey, { cookies: cookieHandlers(cookieStore) })
 }
