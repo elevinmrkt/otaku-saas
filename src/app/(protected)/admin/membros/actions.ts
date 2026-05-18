@@ -29,7 +29,7 @@ export async function createMemberAction(formData: FormData): Promise<string | n
 
   const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
     data: { name },
-    redirectTo: 'https://otaku-saas.vercel.app/auth/callback',
+    redirectTo: 'https://otaku-saas.vercel.app/auth/callback?next=/atualizar-senha',
   })
   if (inviteErr) return inviteErr.message
 
@@ -65,7 +65,7 @@ export async function resendInviteAction(email: string): Promise<string | null> 
   if (!validateEmail(email)) return 'E-mail inválido.'
 
   const { error } = await admin.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://otaku-saas.vercel.app/auth/callback',
+    redirectTo: 'https://otaku-saas.vercel.app/auth/callback?next=/atualizar-senha',
   })
   if (error) return error.message
   return null

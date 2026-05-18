@@ -5,6 +5,7 @@ export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const type = searchParams.get('type')
+  const next = searchParams.get('next') ?? '/home'
 
   if (code) {
     const supabase = await createClient()
@@ -15,5 +16,5 @@ export async function GET(request: Request) {
     return NextResponse.redirect(`${origin}/atualizar-senha`)
   }
 
-  return NextResponse.redirect(`${origin}/home`)
+  return NextResponse.redirect(`${origin}${next}`)
 }
