@@ -65,13 +65,12 @@ export async function resendInviteAction(email: string): Promise<{ link: string 
   if (!validateEmail(email)) return 'E-mail inválido.'
 
   const { data, error } = await admin.auth.admin.generateLink({
-    type: 'magiclink',
+    type: 'recovery',
     email,
   })
   if (error) return error.message
 
-  // Use token_hash directly — bypasses PKCE entirely, verifyOtp needs no local verifier
   const tokenHash = (data.properties as any).hashed_token
-  const link = `https://otaku-saas.vercel.app/atualizar-senha?token_hash=${tokenHash}&type=magiclink`
+  const link = `https://otaku-saas.vercel.app/atualizar-senha?token_hash=${tokenHash}&type=recovery`
   return { link }
 }
