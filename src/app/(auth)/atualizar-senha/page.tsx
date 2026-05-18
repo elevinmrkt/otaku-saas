@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { updatePasswordAction } from './actions'
 
 export default function AtualizarSenhaPage() {
   const supabase = createClient()
@@ -23,28 +24,18 @@ export default function AtualizarSenhaPage() {
       const tokenHash = params.get('token_hash')
       const type = params.get('type')
 
-      // Debug: log URL params to console
-      console.log('[atualizar-senha] params:', { code: !!code, tokenHash: !!tokenHash, type, hash: window.location.hash.slice(0, 30) })
-
       if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code)
-        console.log('[atualizar-senha] exchangeCode error:', error?.message)
+        await supabase.auth.exchangeCodeForSession(code)
         window.history.replaceState({}, '', window.location.pathname)
       } else if (tokenHash && type) {
-        const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type as any })
-        console.log('[atualizar-senha] verifyOtp error:', error?.message)
+        await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type as any })
         window.history.replaceState({}, '', window.location.pathname)
       }
 
       const { data: { session } } = await supabase.auth.getSession()
-      console.log('[atualizar-senha] session after verify:', !!session)
-      if (session) {
-        setSessionReady(true)
-        return
-      }
+      if (session) { setSessionReady(true); return }
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, sess) => {
-        console.log('[atualizar-senha] authStateChange:', event, !!sess)
         if (sess && (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN')) {
           setSessionReady(true)
           subscription.unsubscribe()
@@ -64,8 +55,9 @@ export default function AtualizarSenhaPage() {
     if (password.length < 8) { setError('A senha deve ter pelo menos 8 caracteres.'); return }
     setError('')
     setLoading(true)
-    const { error: err } = await supabase.auth.updateUser({ password })
-    if (err) { setError(err.message); setLoading(false); return }
+    // Use server action — reads session from server-side cookies
+    const err = await updatePasswordAction(password)
+    if (err) { setError(err); setLoading(false); return }
     setDone(true)
     setTimeout(() => router.push('/login'), 2500)
   }
@@ -105,6 +97,12 @@ export default function AtualizarSenhaPage() {
         ) : !sessionReady ? (
           <div style={{ textAlign: 'center', padding: '2rem 0' }}>
             <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Verificando seu acesso...</p>
+            <p style={{ color: 'var(--muted)', fontSize: '0.78rem', marginTop: '0.5rem' }}>
+              Se demorar, o link pode ter expirado.{' '}
+              <a href="/recuperar-senha" style={{ color: 'var(--red)', textDecoration: 'none' }}>
+                Solicitar novo link
+              </a>
+            </p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
