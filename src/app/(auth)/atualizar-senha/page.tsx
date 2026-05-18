@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
@@ -12,6 +12,38 @@ export default function AtualizarSenhaPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)
+  const [sessionReady, setSessionReady] = useState(false)
+
+  useEffect(() => {
+    async function initSession() {
+      // Handle PKCE code in URL (if callback didn't process it)
+      const params = new URLSearchParams(window.location.search)
+      const code = params.get('code')
+      if (code) {
+        await supabase.auth.exchangeCodeForSession(code)
+      }
+
+      // Check if session already exists (set by callback cookies)
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        setSessionReady(true)
+        return
+      }
+
+      // Fallback: wait for auth state change (hash-based flow)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, sess) => {
+        if (sess && (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN')) {
+          setSessionReady(true)
+          subscription.unsubscribe()
+        }
+      })
+
+      return () => subscription.unsubscribe()
+    }
+
+    initSession()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -54,8 +86,12 @@ export default function AtualizarSenhaPage() {
 
         {done ? (
           <div style={{ background: 'rgba(37,211,102,0.08)', border: '1px solid rgba(37,211,102,0.2)', borderRadius: 'var(--r)', padding: '1.25rem' }}>
-            <strong style={{ color: 'var(--green)', display: 'block', marginBottom: '0.4rem' }}>Senha atualizada!</strong>
+            <strong style={{ color: 'var(--green)', display: 'block', marginBottom: '0.4rem' }}>Senha criada!</strong>
             <p style={{ color: 'var(--muted)', fontSize: '0.85rem' }}>Redirecionando para o login...</p>
+          </div>
+        ) : !sessionReady ? (
+          <div style={{ textAlign: 'center', padding: '2rem 0' }}>
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Verificando seu acesso...</p>
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
