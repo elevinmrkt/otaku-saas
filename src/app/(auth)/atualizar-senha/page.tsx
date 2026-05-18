@@ -23,19 +23,28 @@ export default function AtualizarSenhaPage() {
       const code = params.get('code')
       const tokenHash = params.get('token_hash')
       const type = params.get('type')
+      const hash = window.location.hash
+
+      console.log('[senha] URL:', window.location.href)
+      console.log('[senha] query params:', { code: !!code, tokenHash: !!tokenHash, type })
+      console.log('[senha] hash:', hash.slice(0, 60) || '(vazio)')
 
       if (code) {
-        await supabase.auth.exchangeCodeForSession(code)
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        console.log('[senha] exchangeCode:', error?.message ?? 'ok')
         window.history.replaceState({}, '', window.location.pathname)
       } else if (tokenHash && type) {
-        await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type as any })
+        const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: type as any })
+        console.log('[senha] verifyOtp:', error?.message ?? 'ok')
         window.history.replaceState({}, '', window.location.pathname)
       }
 
       const { data: { session } } = await supabase.auth.getSession()
+      console.log('[senha] session:', !!session)
       if (session) { setSessionReady(true); return }
 
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, sess) => {
+        console.log('[senha] authChange:', event, !!sess)
         if (sess && (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN')) {
           setSessionReady(true)
           subscription.unsubscribe()
