@@ -19,6 +19,7 @@ export default function MemberActions({ memberId, memberEmail, currentStatus, cu
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [feedback, setFeedback] = useState<string | null>(null)
+  const [accessLink, setAccessLink] = useState<string | null>(null)
 
   async function updateStatus(status: UserStatus) {
     setLoading(true)
@@ -39,10 +40,14 @@ export default function MemberActions({ memberId, memberEmail, currentStatus, cu
   async function handleResend() {
     setLoading(true)
     setOpen(false)
-    const err = await resendInviteAction(memberEmail)
+    const result = await resendInviteAction(memberEmail)
     setLoading(false)
-    setFeedback(err ?? 'Convite reenviado!')
-    setTimeout(() => setFeedback(null), 3000)
+    if (typeof result === 'string') {
+      setFeedback(result)
+      setTimeout(() => setFeedback(null), 4000)
+    } else {
+      setAccessLink(result.link)
+    }
   }
 
   async function handleDelete() {
@@ -53,6 +58,57 @@ export default function MemberActions({ memberId, memberEmail, currentStatus, cu
     setLoading(false)
     if (err) { setFeedback(err); setTimeout(() => setFeedback(null), 4000); return }
     router.refresh()
+  }
+
+  if (accessLink) {
+    return (
+      <div style={{ position: 'relative' }}>
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 200,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem',
+        }}>
+          <div style={{
+            background: 'var(--card)', border: '1px solid var(--border)',
+            borderRadius: 'var(--r)', padding: '1.5rem', width: '100%', maxWidth: '500px',
+          }}>
+            <strong style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.95rem' }}>
+              Link de acesso gerado
+            </strong>
+            <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginBottom: '1rem' }}>
+              Envie esse link diretamente ao membro ({memberEmail}). Ele expira em 24h e é de uso único.
+            </p>
+            <div style={{
+              background: 'var(--card-2)', border: '1px solid var(--border)',
+              borderRadius: '6px', padding: '0.75rem', fontSize: '0.72rem',
+              color: 'var(--muted)', wordBreak: 'break-all', marginBottom: '1rem',
+            }}>
+              {accessLink}
+            </div>
+            <div style={{ display: 'flex', gap: '0.75rem' }}>
+              <button
+                className="btn-primary"
+                style={{ flex: 1, justifyContent: 'center', fontSize: '0.82rem' }}
+                onClick={() => { navigator.clipboard.writeText(accessLink); setFeedback('Copiado!'); setTimeout(() => setFeedback(null), 2000) }}
+              >
+                Copiar link
+              </button>
+              <button
+                className="btn-ghost"
+                style={{ fontSize: '0.82rem' }}
+                onClick={() => setAccessLink(null)}
+              >
+                Fechar
+              </button>
+            </div>
+            {feedback === 'Copiado!' && (
+              <p style={{ color: 'var(--green)', fontSize: '0.78rem', marginTop: '0.5rem', textAlign: 'center' }}>
+                ✓ Copiado para a área de transferência
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

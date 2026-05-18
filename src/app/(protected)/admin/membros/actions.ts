@@ -59,14 +59,16 @@ export async function deleteMemberAction(memberId: string): Promise<string | nul
   return null
 }
 
-export async function resendInviteAction(email: string): Promise<string | null> {
+export async function resendInviteAction(email: string): Promise<{ link: string } | string> {
   try { await requireRole(['admin', 'suporte']) } catch (e: any) { return e.message }
 
   if (!validateEmail(email)) return 'E-mail inválido.'
 
-  const { error } = await admin.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://otaku-saas.vercel.app/atualizar-senha',
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: 'magiclink',
+    email,
+    options: { redirectTo: 'https://otaku-saas.vercel.app/atualizar-senha' },
   })
   if (error) return error.message
-  return null
+  return { link: data.properties.action_link }
 }
