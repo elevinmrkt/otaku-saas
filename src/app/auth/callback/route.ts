@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     await supabase.auth.exchangeCodeForSession(code)
   }
 
-  if (type === 'recovery') {
+  if (type === 'recovery' || type === 'invite') {
     return NextResponse.redirect(`${origin}/atualizar-senha`)
   }
 
