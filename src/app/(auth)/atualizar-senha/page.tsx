@@ -15,33 +15,37 @@ export default function AtualizarSenhaPage() {
   const [sessionReady, setSessionReady] = useState(false)
 
   useEffect(() => {
+    let sub: { unsubscribe: () => void } | null = null
+
     async function initSession() {
-      // Handle PKCE code in URL (if callback didn't process it)
+      // Exchange PKCE code if present in URL
       const params = new URLSearchParams(window.location.search)
       const code = params.get('code')
       if (code) {
         await supabase.auth.exchangeCodeForSession(code)
+        // Clean code from URL without reload
+        window.history.replaceState({}, '', window.location.pathname)
       }
 
-      // Check if session already exists (set by callback cookies)
+      // Check session (covers PKCE + cookie-based flows)
       const { data: { session } } = await supabase.auth.getSession()
       if (session) {
         setSessionReady(true)
         return
       }
 
-      // Fallback: wait for auth state change (hash-based flow)
+      // Fallback: hash-based tokens (Supabase implicit flow)
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, sess) => {
         if (sess && (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN')) {
           setSessionReady(true)
           subscription.unsubscribe()
         }
       })
-
-      return () => subscription.unsubscribe()
+      sub = subscription
     }
 
     initSession()
+    return () => { sub?.unsubscribe() }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
