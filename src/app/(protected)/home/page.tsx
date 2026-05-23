@@ -20,6 +20,7 @@ export default async function HomePage() {
     { data: recentContent },
     { data: trails },
     { data: activeChallenge },
+    { data: activeClub },
     { data: groups },
     { data: upcomingEvents },
   ] = await Promise.all([
@@ -30,6 +31,7 @@ export default async function HomePage() {
     supabase.from('content_items').select('*, media_assets(*), categories(title, slug)').eq('status', 'publicado').order('published_at', { ascending: false }).limit(12) as any,
     supabase.from('trails').select('*').eq('status', 'publicado').order('order_index').limit(8),
     supabase.from('challenges').select('*, challenge_tasks(id, title, description, xp_reward, order_index)').eq('status', 'ativo').single() as any,
+    supabase.from('book_club_cycles').select('*').eq('status', 'ativo').single() as any,
     supabase.from('community_groups').select('*').eq('status', 'ativo').order('created_at').limit(3),
     supabase.from('events').select('*').eq('status', 'agendado').order('start_datetime').limit(3),
   ])
@@ -210,8 +212,76 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* ── Clube da Leitura ── */}
+      <section className="content-section" id="clube">
+        <div className="section-head inline">
+          <div>
+            <span className="label">Ciclo atual</span>
+            <h2>Clube da Leitura</h2>
+          </div>
+          <Link href="/clube-da-leitura" style={{ fontSize: '0.82rem', color: 'var(--muted)', fontWeight: 600 }}>Acessar clube →</Link>
+        </div>
+        {activeClub ? (
+          <div style={{ display: 'grid', gridTemplateColumns: (activeClub as any).mockup_url || (activeClub as any).cover_url ? '1fr auto' : '1fr', gap: '2rem', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '2rem', alignItems: 'center' }}>
+            <div>
+              <span className="label">{(activeClub as any).theme ?? 'Obra do mês'}</span>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.4rem, 3vw, 2rem)', letterSpacing: '0.04em', lineHeight: 1, marginBottom: '0.4rem', color: 'var(--text)' }}>
+                {(activeClub as any).work_title}
+              </h3>
+              {(activeClub as any).work_author && (
+                <p style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '1rem' }}>por {(activeClub as any).work_author}</p>
+              )}
+              {(activeClub as any).summary && (
+                <p style={{ fontSize: '0.88rem', color: 'var(--text)', lineHeight: 1.6, marginBottom: '1.25rem', maxWidth: '520px', opacity: 0.8 }}>
+                  {(activeClub as any).summary.length > 200 ? (activeClub as any).summary.slice(0, 200) + '...' : (activeClub as any).summary}
+                </p>
+              )}
+              {(activeClub as any).total_pages && (
+                <div style={{ marginBottom: '1.25rem', maxWidth: '320px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.35rem' }}>
+                    <span>Leitura coletiva — pág. {(activeClub as any).current_page ?? 0}/{(activeClub as any).total_pages}</span>
+                    <span style={{ color: 'var(--gold)', fontWeight: 700 }}>
+                      {Math.round(((activeClub as any).current_page ?? 0) / (activeClub as any).total_pages * 100)}%
+                    </span>
+                  </div>
+                  <div className="prog-bar">
+                    <div className="prog-fill" style={{ width: `${Math.round(((activeClub as any).current_page ?? 0) / (activeClub as any).total_pages * 100)}%`, background: 'var(--gold)' }} />
+                  </div>
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <Link href="/clube-da-leitura" className="btn-primary">
+                  <BookOpen size={14} />
+                  Acessar Clube da Leitura
+                </Link>
+                {(activeClub as any).meeting_date && (
+                  <span style={{ fontSize: '0.78rem', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Calendar size={12} />
+                    Encontro: {new Date((activeClub as any).meeting_date).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })}
+                  </span>
+                )}
+              </div>
+            </div>
+            {((activeClub as any).mockup_url || (activeClub as any).cover_url) && (
+              <Link href="/clube-da-leitura" style={{ flexShrink: 0 }}>
+                <img
+                  src={(activeClub as any).mockup_url ?? (activeClub as any).cover_url}
+                  alt={(activeClub as any).work_title}
+                  style={{ width: '160px', borderRadius: '8px', boxShadow: '0 16px 40px rgba(0,0,0,0.5)', display: 'block' }}
+                />
+              </Link>
+            )}
+          </div>
+        ) : (
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', textAlign: 'center' }}>
+            <BookOpen size={32} color="var(--muted)" />
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Nenhum ciclo ativo no momento. A próxima obra será anunciada em breve.</p>
+          </div>
+        )}
+      </section>
+
       {/* ── Desafio Mensal ── */}
-      {activeChallenge && (
+      {activeChallenge ? (
         <section className="challenge-section" id="desafio">
           {activeChallenge.poster_url && (
             <div className="challenge-bg">
@@ -283,6 +353,18 @@ export default async function HomePage() {
                   )
               }
             </div>
+          </div>
+        </section>
+      ) : (
+        <section className="content-section" id="desafio">
+          <div className="section-head">
+            <span className="label">Protocolo mensal</span>
+            <h2>Desafio Mensal</h2>
+          </div>
+          <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', textAlign: 'center' }}>
+            <Flame size={32} color="var(--muted)" />
+            <p style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Nenhuma missão ativa agora. O próximo desafio será liberado pela equipe.</p>
+            <Link href="/desafio-mensal" className="btn-ghost sm" style={{ marginTop: '0.25rem' }}>Ver histórico</Link>
           </div>
         </section>
       )}

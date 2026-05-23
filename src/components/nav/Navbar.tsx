@@ -43,8 +43,9 @@ export default function Navbar({ profile, xpSummary, unreadCount }: NavbarProps)
   const navLinks = [
     { href: '/home', label: 'Início' },
     { href: '/trilhas', label: 'Trilhas' },
-    { href: '/biblioteca', label: 'Biblioteca' },
+    { href: '/clube-da-leitura', label: 'Clube' },
     { href: '/desafio-mensal', label: 'Desafio' },
+    { href: '/agenda', label: 'Agenda' },
     { href: '/comunidade', label: 'Comunidade' },
   ]
 
@@ -168,7 +169,7 @@ export default function Navbar({ profile, xpSummary, unreadCount }: NavbarProps)
 
         {/* Notifications */}
         <Link
-          href="/home#notificacoes"
+          href="/notificacoes"
           style={{
             position: 'relative',
             color: 'var(--muted)', padding: '0.4rem',
