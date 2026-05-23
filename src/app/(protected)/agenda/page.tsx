@@ -1,13 +1,38 @@
 import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { Calendar, Video, Clock, ExternalLink } from 'lucide-react'
+import type { EventType } from '@/types/database'
 
-export default async function AgendaPage() {
+const EVENT_TYPES: { value: EventType | 'todos'; label: string }[] = [
+  { value: 'todos', label: 'Todos' },
+  { value: 'live', label: 'Live' },
+  { value: 'aula', label: 'Aula' },
+  { value: 'clube', label: 'Clube' },
+  { value: 'desafio', label: 'Desafio' },
+  { value: 'encontro', label: 'Encontro' },
+  { value: 'publicacao', label: 'Publicação' },
+]
+
+export default async function AgendaPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tipo?: string }>
+}) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
+
+  const { tipo } = await searchParams
+  const activeType = (tipo && tipo !== 'todos') ? tipo as EventType : null
   const now = new Date().toISOString()
 
+  const baseUpcoming = supabase.from('events').select('*').gte('start_datetime', now).order('start_datetime', { ascending: true })
+  const basePast = supabase.from('events').select('*').lt('start_datetime', now).order('start_datetime', { ascending: false }).limit(10)
+
   const [{ data: upcoming }, { data: past }] = await Promise.all([
-    supabase.from('events').select('*').gte('start_datetime', now).order('start_datetime', { ascending: true }),
-    supabase.from('events').select('*').lt('start_datetime', now).order('start_datetime', { ascending: false }).limit(10),
+    activeType ? baseUpcoming.eq('event_type', activeType) : baseUpcoming,
+    activeType ? basePast.eq('event_type', activeType) : basePast,
   ])
 
   function EventCard({ ev, isPast = false }: { ev: any; isPast?: boolean }) {
@@ -50,9 +75,32 @@ export default async function AgendaPage() {
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto' }}>
-      <div style={{ marginBottom: '2rem' }}>
+      <div style={{ marginBottom: '1.5rem' }}>
         <span className="label">Comunidade</span>
         <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.2rem', letterSpacing: '0.04em' }}>Agenda</h1>
+      </div>
+
+      {/* Filter chips */}
+      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '2rem' }}>
+        {EVENT_TYPES.map(({ value, label }) => {
+          const isActive = value === 'todos' ? !activeType : activeType === value
+          return (
+            <Link
+              key={value}
+              href={value === 'todos' ? '/agenda' : `/agenda?tipo=${value}`}
+              style={{
+                fontSize: '0.78rem', fontWeight: 700, padding: '0.35rem 0.85rem',
+                borderRadius: '99px', textDecoration: 'none',
+                border: `1px solid ${isActive ? 'var(--red)' : 'var(--border)'}`,
+                background: isActive ? 'rgba(229,9,20,0.1)' : 'var(--card)',
+                color: isActive ? 'var(--red)' : 'var(--muted)',
+                transition: 'all 150ms',
+              }}
+            >
+              {label}
+            </Link>
+          )
+        })}
       </div>
 
       {upcoming && upcoming.length > 0 ? (
@@ -65,7 +113,7 @@ export default async function AgendaPage() {
       ) : (
         <div className="empty-state" style={{ marginBottom: '3rem' }}>
           <Calendar size={40} color="var(--muted)" />
-          <p>Nenhum evento agendado no momento.</p>
+          <p>Nenhum evento {activeType ? `do tipo "${activeType}"` : ''} agendado no momento.</p>
           <p style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Fique de olho — em breve novidades na agenda.</p>
         </div>
       )}
