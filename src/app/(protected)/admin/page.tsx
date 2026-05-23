@@ -16,8 +16,8 @@ export default async function AdminDashboard() {
     { count: videoDone },
     { count: anamnesisDone },
     { count: publishedContent },
-    { data: activeChallenge },
-    { data: activeClub },
+    { data: challengeRows },
+    { data: clubRows },
     { data: recentComments },
     { count: inactiveMembers },
   ] = await Promise.all([
@@ -27,11 +27,14 @@ export default async function AdminDashboard() {
     supabase.from('users').select('*', { count: 'exact', head: true }).not('welcome_video_completed_at', 'is', null),
     supabase.from('users').select('*', { count: 'exact', head: true }).not('anamnesis_completed_at', 'is', null),
     supabase.from('content_items').select('*', { count: 'exact', head: true }).eq('status', 'publicado'),
-    supabase.from('challenges').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).maybeSingle(),
-    supabase.from('book_club_cycles').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).maybeSingle(),
+    supabase.from('challenges').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).limit(1) as any,
+    supabase.from('book_club_cycles').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).limit(1) as any,
     supabase.from('comments').select('*, users(nickname, name), content_items(title)').order('created_at', { ascending: false }).limit(5) as any,
     supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'membro').lt('last_login_at', thirtyDaysAgo),
   ])
+
+  const activeChallenge: any = (challengeRows as any[])?.[0] ?? null
+  const activeClub: any = (clubRows as any[])?.[0] ?? null
 
   const stats = [
     { label: 'Membros ativos', value: totalMembers ?? 0, icon: <Users size={20} />, color: 'var(--red)', href: '/admin/membros' },

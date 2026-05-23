@@ -19,8 +19,8 @@ export default async function HomePage() {
     { data: inProgress },
     { data: recentContent },
     { data: trails },
-    { data: activeChallenge },
-    { data: activeClub },
+    { data: challengeRows },
+    { data: clubRows },
     { data: groups },
     { data: upcomingEvents },
   ] = await Promise.all([
@@ -30,11 +30,14 @@ export default async function HomePage() {
     supabase.from('content_progress').select('*, content_items(id, title, slug, content_type, thumbnail_url, description)').eq('user_id', user.id).eq('status', 'em_andamento').order('updated_at', { ascending: false }).limit(6) as any,
     supabase.from('content_items').select('*, media_assets(*), categories(title, slug)').eq('status', 'publicado').order('published_at', { ascending: false }).limit(12) as any,
     supabase.from('trails').select('*').eq('status', 'publicado').order('order_index').limit(8),
-    supabase.from('challenges').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).maybeSingle() as any,
-    supabase.from('book_club_cycles').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).maybeSingle() as any,
+    supabase.from('challenges').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).limit(1) as any,
+    supabase.from('book_club_cycles').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).limit(1) as any,
     supabase.from('community_groups').select('*').eq('status', 'ativo').order('created_at').limit(3),
     supabase.from('events').select('*').eq('status', 'agendado').order('start_datetime').limit(3),
   ])
+
+  const activeChallenge: any = (challengeRows as any[])?.[0] ?? null
+  const activeClub: any = (clubRows as any[])?.[0] ?? null
 
   // Trail progress
   const trailProgressMap: Record<string, number> = {}
@@ -70,7 +73,7 @@ export default async function HomePage() {
   if (activeChallenge) {
     const { data: tasks } = await supabase
       .from('challenge_tasks')
-      .select('id, title, description, xp_reward, order_index')
+      .select('id, title, description, xp_reward, day_number')
       .eq('challenge_id', (activeChallenge as any).id)
       .order('day_number')
     challengeTasks = tasks ?? []
@@ -346,7 +349,7 @@ export default async function HomePage() {
             <div className="challenge-missions">
               <span className="label">Missões do desafio</span>
               {challengeTasks.length > 0
-                ? (challengeTasks as any[]).sort((a: any, b: any) => a.order_index - b.order_index).slice(0, 5).map((task: any, i: number) => (
+                ? (challengeTasks as any[]).sort((a: any, b: any) => (a.day_number ?? 0) - (b.day_number ?? 0)).slice(0, 5).map((task: any, i: number) => (
                     <div key={task.id} className="mission-item">
                       <span className="mission-num">{String(i + 1).padStart(2, '0')}</span>
                       <div className="mission-body">

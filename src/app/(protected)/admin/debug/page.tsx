@@ -7,19 +7,22 @@ export default async function DebugPage() {
     { data: challenges, error: e1, count: c1 },
     { data: clubs, error: e2, count: c2 },
     { data: challengesTasks, error: e3 },
-    { data: challengesRaw, error: e4 },
+    { data: challengeActive, error: e4 },
+    { data: clubActive, error: e5 },
   ] = await Promise.all([
     supabase.from('challenges').select('id, title, status, created_at', { count: 'exact' }).order('created_at', { ascending: false }).limit(10),
     supabase.from('book_club_cycles').select('id, work_title, status, created_at', { count: 'exact' }).order('created_at', { ascending: false }).limit(10),
     supabase.from('challenge_tasks').select('id, challenge_id, title, day_number').limit(10),
-    supabase.from('challenges').select('*, challenge_tasks(*)').limit(3) as any,
+    supabase.from('challenges').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).limit(1) as any,
+    supabase.from('book_club_cycles').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).limit(1) as any,
   ])
 
   const result = {
-    challenges: { count: c1, error: e1?.message ?? null, data: challenges },
-    book_club_cycles: { count: c2, error: e2?.message ?? null, data: clubs },
+    challenges_all: { count: c1, error: e1?.message ?? null, data: challenges },
+    book_club_cycles_all: { count: c2, error: e2?.message ?? null, data: clubs },
     challenge_tasks: { error: e3?.message ?? null, data: challengesTasks },
-    challenges_with_join: { error: e4?.message ?? null, data: challengesRaw },
+    challenge_active_filter: { error: e4?.message ?? null, data: challengeActive },
+    club_active_filter: { error: e5?.message ?? null, data: clubActive },
   }
 
   return (

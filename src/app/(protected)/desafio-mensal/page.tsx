@@ -8,7 +8,8 @@ export default async function DesafioMensalPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: challenge } = await supabase.from('challenges').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).maybeSingle()
+  const { data: challengeRows } = await supabase.from('challenges').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).limit(1) as any
+  const challenge: any = (challengeRows as any[])?.[0] ?? null
   const { data: pastChallenges } = await supabase.from('challenges').select('*').eq('status', 'encerrado').order('end_date', { ascending: false }).limit(5)
 
   let tasks: any[] = []
