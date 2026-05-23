@@ -30,7 +30,7 @@ export default async function HomePage() {
     supabase.from('content_progress').select('*, content_items(id, title, slug, content_type, thumbnail_url, description)').eq('user_id', user.id).eq('status', 'em_andamento').order('updated_at', { ascending: false }).limit(6) as any,
     supabase.from('content_items').select('*, media_assets(*), categories(title, slug)').eq('status', 'publicado').order('published_at', { ascending: false }).limit(12) as any,
     supabase.from('trails').select('*').eq('status', 'publicado').order('order_index').limit(8),
-    supabase.from('challenges').select('*, challenge_tasks(id, title, description, xp_reward, order_index)').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).maybeSingle() as any,
+    supabase.from('challenges').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).maybeSingle() as any,
     supabase.from('book_club_cycles').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).maybeSingle() as any,
     supabase.from('community_groups').select('*').eq('status', 'ativo').order('created_at').limit(3),
     supabase.from('events').select('*').eq('status', 'agendado').order('start_datetime').limit(3),
@@ -65,8 +65,18 @@ export default async function HomePage() {
     ? Math.min(((totalXp - levelInfo.current.min_xp) / (nextLevelXp - levelInfo.current.min_xp)) * 100, 100)
     : 100
 
+  // Challenge tasks (fetched separately to avoid FK dependency)
+  let challengeTasks: any[] = []
+  if (activeChallenge) {
+    const { data: tasks } = await supabase
+      .from('challenge_tasks')
+      .select('id, title, description, xp_reward, order_index')
+      .eq('challenge_id', (activeChallenge as any).id)
+      .order('day_number')
+    challengeTasks = tasks ?? []
+  }
+
   // Challenge day calculation
-  const challengeTasks = (activeChallenge as any)?.challenge_tasks ?? []
   const totalDays = activeChallenge?.duration_days ?? 7
   const startDate = activeChallenge?.start_date ? new Date(activeChallenge.start_date) : null
   const currentDay = startDate
