@@ -8,7 +8,7 @@ export default async function ClubeDaLeituraPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const { data: activeClub } = await supabase.from('book_club_cycles').select('*').eq('status', 'ativo').single()
+  const { data: activeClub } = await supabase.from('book_club_cycles').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).maybeSingle()
   const { data: pastCycles } = await supabase.from('book_club_cycles').select('*').eq('status', 'encerrado').order('meeting_date', { ascending: false }).limit(6)
 
   const progressPct = activeClub?.total_pages

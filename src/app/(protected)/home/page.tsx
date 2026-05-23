@@ -30,8 +30,8 @@ export default async function HomePage() {
     supabase.from('content_progress').select('*, content_items(id, title, slug, content_type, thumbnail_url, description)').eq('user_id', user.id).eq('status', 'em_andamento').order('updated_at', { ascending: false }).limit(6) as any,
     supabase.from('content_items').select('*, media_assets(*), categories(title, slug)').eq('status', 'publicado').order('published_at', { ascending: false }).limit(12) as any,
     supabase.from('trails').select('*').eq('status', 'publicado').order('order_index').limit(8),
-    supabase.from('challenges').select('*, challenge_tasks(id, title, description, xp_reward, order_index)').eq('status', 'ativo').single() as any,
-    supabase.from('book_club_cycles').select('*').eq('status', 'ativo').single() as any,
+    supabase.from('challenges').select('*, challenge_tasks(id, title, description, xp_reward, order_index)').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).maybeSingle() as any,
+    supabase.from('book_club_cycles').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).maybeSingle() as any,
     supabase.from('community_groups').select('*').eq('status', 'ativo').order('created_at').limit(3),
     supabase.from('events').select('*').eq('status', 'agendado').order('start_datetime').limit(3),
   ])
