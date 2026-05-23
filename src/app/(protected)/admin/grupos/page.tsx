@@ -1,7 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import { Plus, Edit } from 'lucide-react'
 import GroupForm from '@/components/admin/GroupForm'
+import DeleteButton from '@/components/admin/DeleteButton'
+
+async function deleteGrupo(id: string) {
+  'use server'
+  const supabase = await createClient()
+  await supabase.from('community_groups').delete().eq('id', id)
+  revalidatePath('/admin/grupos')
+}
 
 export default async function AdminGrupos({
   searchParams,
@@ -34,6 +43,7 @@ export default async function AdminGrupos({
                 <span style={{ fontSize: '0.75rem', color: g.status === 'ativo' ? 'var(--green)' : 'var(--muted)', fontWeight: 700 }}>{g.status} · {g.group_type}</span>
               </div>
               <Link href={`/admin/grupos?acao=editar&id=${g.id}`} className="btn-ghost sm"><Edit size={13} />Editar</Link>
+              <DeleteButton action={deleteGrupo.bind(null, g.id)} confirmMsg={`Apagar o grupo "${g.title}" permanentemente?`} />
             </div>
           ))}
         </div>

@@ -1,8 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 import { LEVELS } from '@/types/database'
 import BadgeForm from '@/components/admin/BadgeForm'
+import DeleteButton from '@/components/admin/DeleteButton'
 import { Plus, Edit, Star, Zap } from 'lucide-react'
 import Link from 'next/link'
+
+async function deleteBadge(id: string) {
+  'use server'
+  const supabase = await createClient()
+  await supabase.from('user_badges').delete().eq('badge_id', id)
+  await supabase.from('badges').delete().eq('id', id)
+  revalidatePath('/admin/gamificacao')
+}
 
 export default async function AdminGamificacao({
   searchParams,
@@ -65,7 +75,10 @@ export default async function AdminGamificacao({
                     <span style={{ fontSize: '0.72rem', color: 'var(--muted)' }}>{b.description}</span>
                     {b.xp_reward > 0 && <span style={{ display: 'block', fontSize: '0.7rem', color: 'var(--gold)', marginTop: '0.25rem' }}>+{b.xp_reward} XP</span>}
                   </div>
-                  <Link href={`/admin/gamificacao?acao=editar&id=${b.id}`} className="btn-ghost sm"><Edit size={12} /></Link>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', flexShrink: 0 }}>
+                    <Link href={`/admin/gamificacao?acao=editar&id=${b.id}`} className="btn-ghost sm"><Edit size={12} /></Link>
+                    <DeleteButton action={deleteBadge.bind(null, b.id)} confirmMsg={`Apagar a conquista "${b.title}"? O registro de membros que a possuem também será apagado.`} />
+                  </div>
                 </div>
               ))}
             </div>

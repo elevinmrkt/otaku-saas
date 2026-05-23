@@ -1,7 +1,18 @@
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import { Plus, Edit } from 'lucide-react'
 import ChallengeAdminForm from '@/components/admin/ChallengeAdminForm'
+import DeleteButton from '@/components/admin/DeleteButton'
+
+async function deleteDesafio(id: string) {
+  'use server'
+  const supabase = await createClient()
+  await supabase.from('user_challenge_progress').delete().eq('challenge_id', id)
+  await supabase.from('challenge_tasks').delete().eq('challenge_id', id)
+  await supabase.from('challenges').delete().eq('id', id)
+  revalidatePath('/admin/desafio')
+}
 
 export default async function AdminDesafio({
   searchParams,
@@ -35,6 +46,7 @@ export default async function AdminDesafio({
                 <span style={{ fontSize: '0.75rem', color: c.status === 'ativo' ? 'var(--green)' : 'var(--muted)', fontWeight: 700 }}>{c.status} · {c.duration_days} dias</span>
               </div>
               <Link href={`/admin/desafio?acao=editar&id=${c.id}`} className="btn-ghost sm"><Edit size={13} />Editar</Link>
+              <DeleteButton action={deleteDesafio.bind(null, c.id)} confirmMsg={`Apagar o desafio "${c.title}" e todas as missões? Isso não pode ser desfeito.`} />
             </div>
           ))}
         </div>

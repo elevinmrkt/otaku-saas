@@ -1,7 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import { Plus, Edit } from 'lucide-react'
 import EventForm from '@/components/admin/EventForm'
+import DeleteButton from '@/components/admin/DeleteButton'
+
+async function deleteEvento(id: string) {
+  'use server'
+  const supabase = await createClient()
+  await supabase.from('events').delete().eq('id', id)
+  revalidatePath('/admin/agenda')
+}
 
 export default async function AdminAgenda({
   searchParams,
@@ -42,6 +51,7 @@ export default async function AdminAgenda({
                 </div>
                 <span style={{ fontSize: '0.7rem', fontWeight: 700, color: ev.status === 'agendado' ? 'var(--green)' : 'var(--muted)', background: 'var(--card-2)', padding: '2px 8px', borderRadius: '99px' }}>{ev.status}</span>
                 <Link href={`/admin/agenda?acao=editar&id=${ev.id}`} className="btn-ghost sm"><Edit size={13} />Editar</Link>
+                <DeleteButton action={deleteEvento.bind(null, ev.id)} confirmMsg={`Apagar o evento "${ev.title}" permanentemente?`} />
               </div>
             )
           })}

@@ -1,7 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
+import { revalidatePath } from 'next/cache'
 import Link from 'next/link'
 import { Plus, Edit } from 'lucide-react'
 import ClubForm from '@/components/admin/ClubForm'
+import DeleteButton from '@/components/admin/DeleteButton'
+
+async function deleteClube(id: string) {
+  'use server'
+  const supabase = await createClient()
+  await supabase.from('book_club_cycles').delete().eq('id', id)
+  revalidatePath('/admin/clube')
+}
 
 export default async function AdminClube({
   searchParams,
@@ -38,6 +47,7 @@ export default async function AdminClube({
               </div>
               {c.meeting_date && <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>{new Date(c.meeting_date).toLocaleDateString('pt-BR')}</span>}
               <Link href={`/admin/clube?acao=editar&id=${c.id}`} className="btn-ghost sm"><Edit size={13} />Editar</Link>
+              <DeleteButton action={deleteClube.bind(null, c.id)} confirmMsg={`Apagar o ciclo "${c.work_title}" permanentemente?`} />
             </div>
           ))}
         </div>
