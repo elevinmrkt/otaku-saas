@@ -550,6 +550,15 @@ button, input, textarea, select { font: inherit; }
 @media (max-width: 768px) { .footer-inner { flex-direction: column; align-items: flex-start; } }
 
 /* ===========================================
+   NAVBAR MOBILE
+   =========================================== */
+@media (max-width: 768px) {
+  .nav-links-desktop { display: none !important; }
+  .nav-hamburger { display: flex !important; }
+  .nav-search-btn { display: none !important; }
+}
+
+/* ===========================================
    ARTICLE BODY (artigos / paginas)
    =========================================== */
 .article-body h1, .article-body h2, .article-body h3 {
