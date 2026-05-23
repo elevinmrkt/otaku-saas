@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, Save } from 'lucide-react'
+import UploadButton from '@/components/admin/UploadButton'
 
 export default function BadgeForm({ badge }: { badge?: any }) {
   const router = useRouter()
@@ -43,7 +44,10 @@ export default function BadgeForm({ badge }: { badge?: any }) {
       <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <label className="field">Título *<input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} required /></label>
-          <label className="field">Ícone (emoji ou URL)<input value={form.icon_url} onChange={e => setForm(f => ({ ...f, icon_url: e.target.value }))} placeholder="🏅 ou https://..." /></label>
+          <label className="field">Ícone (emoji ou URL)
+            <input value={form.icon_url} onChange={e => setForm(f => ({ ...f, icon_url: e.target.value }))} placeholder="🏅 ou https://..." />
+            <UploadButton bucket="media" folder="thumbnails" accept="image/*" label="Upload ícone" onUrl={url => setForm(f => ({ ...f, icon_url: url }))} currentUrl={form.icon_url} />
+          </label>
         </div>
         <label className="field">Descrição<textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></label>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

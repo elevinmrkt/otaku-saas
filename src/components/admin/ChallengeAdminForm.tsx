@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react'
+import UploadButton from '@/components/admin/UploadButton'
 
 interface Task { id?: string; day_number: number; title: string; description: string; reflection_prompt: string; xp_reward: number }
 
@@ -82,7 +83,10 @@ export default function ChallengeAdminForm({ challenge }: { challenge?: any }) {
           <label className="field">Link da call<input type="url" value={form.meeting_link} onChange={e => setForm(f => ({ ...f, meeting_link: e.target.value }))} placeholder="https://..." /></label>
           <label className="field">Link do grupo WhatsApp<input type="url" value={form.whatsapp_group_url} onChange={e => setForm(f => ({ ...f, whatsapp_group_url: e.target.value }))} placeholder="https://chat.whatsapp.com/..." /></label>
         </div>
-        <label className="field">Pôster URL<input type="url" value={form.poster_url} onChange={e => setForm(f => ({ ...f, poster_url: e.target.value }))} placeholder="https://..." /></label>
+        <label className="field">Pôster
+          <input type="url" value={form.poster_url} onChange={e => setForm(f => ({ ...f, poster_url: e.target.value }))} placeholder="https://..." />
+          <UploadButton bucket="media" folder="thumbnails" accept="image/*" label="Upload pôster" onUrl={url => setForm(f => ({ ...f, poster_url: url }))} currentUrl={form.poster_url} />
+        </label>
 
         {/* Tasks */}
         <div style={{ marginTop: '1rem' }}>

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, Save } from 'lucide-react'
+import UploadButton from '@/components/admin/UploadButton'
 
 export default function ClubForm({ cycle }: { cycle?: any }) {
   const router = useRouter()
@@ -56,8 +57,14 @@ export default function ClubForm({ cycle }: { cycle?: any }) {
           <label className="field">Status<select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}><option value="previsto">Previsto</option><option value="ativo">Ativo</option><option value="encerrado">Encerrado</option></select></label>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-          <label className="field">Capa URL<input type="url" value={form.cover_url} onChange={e => setForm(f => ({ ...f, cover_url: e.target.value }))} placeholder="https://..." /></label>
-          <label className="field">Mockup URL<input type="url" value={form.mockup_url} onChange={e => setForm(f => ({ ...f, mockup_url: e.target.value }))} placeholder="https://..." /></label>
+          <label className="field">Capa
+            <input type="url" value={form.cover_url} onChange={e => setForm(f => ({ ...f, cover_url: e.target.value }))} placeholder="https://..." />
+            <UploadButton bucket="media" folder="thumbnails" accept="image/*" label="Upload capa" onUrl={url => setForm(f => ({ ...f, cover_url: url }))} currentUrl={form.cover_url} />
+          </label>
+          <label className="field">Mockup
+            <input type="url" value={form.mockup_url} onChange={e => setForm(f => ({ ...f, mockup_url: e.target.value }))} placeholder="https://..." />
+            <UploadButton bucket="media" folder="thumbnails" accept="image/*" label="Upload mockup" onUrl={url => setForm(f => ({ ...f, mockup_url: url }))} currentUrl={form.mockup_url} />
+          </label>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
           <label className="field">Data de início<input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} /></label>

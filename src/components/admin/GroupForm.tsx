@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, Save } from 'lucide-react'
+import UploadButton from '@/components/admin/UploadButton'
 
 export default function GroupForm({ group }: { group?: any }) {
   const router = useRouter()
@@ -45,7 +46,10 @@ export default function GroupForm({ group }: { group?: any }) {
           <label className="field">Visibilidade<select value={form.visibility} onChange={e => setForm(f => ({ ...f, visibility: e.target.value }))}><option value="publico">Público</option><option value="privado">Privado</option></select></label>
         </div>
         <label className="field">Link do grupo<input type="url" value={form.whatsapp_url} onChange={e => setForm(f => ({ ...f, whatsapp_url: e.target.value }))} placeholder="https://chat.whatsapp.com/..." /></label>
-        <label className="field">Imagem/pôster URL<input type="url" value={form.poster_url} onChange={e => setForm(f => ({ ...f, poster_url: e.target.value }))} placeholder="https://..." /></label>
+        <label className="field">Imagem/pôster
+          <input type="url" value={form.poster_url} onChange={e => setForm(f => ({ ...f, poster_url: e.target.value }))} placeholder="https://..." />
+          <UploadButton bucket="media" folder="thumbnails" accept="image/*" label="Upload imagem" onUrl={url => setForm(f => ({ ...f, poster_url: url }))} currentUrl={form.poster_url} />
+        </label>
         <label className="field">Regras do grupo<textarea value={form.rules} onChange={e => setForm(f => ({ ...f, rules: e.target.value }))} placeholder="Resumo das regras de convivência..." /></label>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
           <button className="btn-primary" type="submit" disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Save size={14} />{saving ? 'Salvando...' : group ? 'Salvar' : 'Criar grupo'}</button>
