@@ -33,8 +33,8 @@ export default async function AdminConteudos({
   const supabase = await createClient()
 
   const [{ data: categories }, { data: trails }] = await Promise.all([
-    supabase.from('categories').select('id, title').order('title'),
-    supabase.from('trails').select('id, title').order('order_index'),
+    supabase.from('categories').select('*').order('title'),
+    supabase.from('trails').select('*').order('order_index'),
   ])
 
   let editItem = null
