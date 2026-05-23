@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -15,14 +15,15 @@
   --subtle:    #3a3a3a;
 
   --red:       #E50914;
+  --red-dark:  #b80710;
   --red-glow:  rgba(229,9,20,0.28);
-  --gold:      #c8901a;
-  --gold-lt:   #e4ab3a;
-  --gold-dim:  rgba(200,144,26,0.15);
+  --gold:      #d4a020;
+  --gold-lt:   #f0c84a;
+  --gold-dim:  rgba(212,160,32,0.15);
   --green:     #25D366;
   --green-dim: rgba(37,211,102,0.15);
 
-  --font-body:    "Manrope", system-ui, sans-serif;
+  --font-body:    "Outfit", "Inter", system-ui, sans-serif;
   --font-display: "Bebas Neue", Impact, sans-serif;
   --r:            16px;
   --r-lg:         24px;
@@ -87,17 +88,23 @@ button, input, textarea, select { font: inherit; }
   text-decoration: none;
 }
 .btn-primary {
-  background: var(--red); color: white;
-  box-shadow: 0 2px 12px var(--red-glow);
+  background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+  color: white; box-shadow: 0 2px 12px var(--red-glow);
+  position: relative; overflow: hidden;
 }
-.btn-primary:hover { background: #f40612; box-shadow: 0 4px 24px rgba(229,9,20,.45); transform: translateY(-1px); }
+.btn-primary::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.18) 50%, transparent 70%);
+  transform: translateX(-100%); animation: shine 6s ease-in-out infinite;
+}
+.btn-primary:hover { background: linear-gradient(135deg, #f40612 0%, #9e060f 100%); box-shadow: 0 4px 24px rgba(229,9,20,.55); transform: translateY(-2px); }
 .btn-primary.sm { min-height: 38px; font-size: 0.73rem; padding: 0 1.25rem; }
 
 .btn-ghost {
-  border: 1px solid rgba(255,255,255,0.25); background: rgba(255,255,255,0.12);
-  color: var(--text); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08);
+  color: var(--text); backdrop-filter: blur(12px);
 }
-.btn-ghost:hover { border-color: rgba(255,255,255,0.45); background: rgba(255,255,255,0.2); transform: translateY(-1px); }
+.btn-ghost:hover { border-color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.16); transform: translateY(-2px); }
 .btn-ghost.sm { min-height: 38px; font-size: 0.73rem; padding: 0 1.25rem; }
 
 .field {
@@ -215,6 +222,18 @@ button, input, textarea, select { font: inherit; }
 .mission-body strong { display: block; font-size: 0.9rem; font-weight: 700; color: var(--text); }
 .mission-body p { font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
 
+@keyframes shine {
+  0%   { transform: translateX(-100%); }
+  18%  { transform: translateX(100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes ken-burns {
+  from { transform: scale(1); }
+  to   { transform: scale(1.06); }
+}
+.ken-burns { animation: ken-burns 10s ease-in-out alternate infinite; }
+
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -222,10 +241,27 @@ button, input, textarea, select { font: inherit; }
 .animate-fade-in { animation: fade-in 350ms ease both; }
 
 @keyframes slide-up {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(28px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-.animate-slide-up { animation: slide-up 500ms ease both; }
+.animate-slide-up { animation: slide-up 560ms cubic-bezier(0.22,1,0.36,1) both; }
+
+.reveal {
+  opacity: 0; transform: translateY(24px);
+  transition: opacity 600ms cubic-bezier(0.22,1,0.36,1), transform 600ms cubic-bezier(0.22,1,0.36,1);
+}
+.reveal.is-visible { opacity: 1; transform: translateY(0); }
+
+.netflix-card {
+  position: relative; overflow: hidden; border-radius: var(--r);
+  border: 1px solid var(--border); cursor: pointer;
+  transition: transform 300ms cubic-bezier(0.22,1,0.36,1), box-shadow 300ms ease, border-color 300ms;
+}
+.netflix-card:hover {
+  transform: translateY(-6px) scale(1.015);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+  border-color: var(--border-2);
+}
 
 .card-hover { transition: border-color 150ms; }
 .card-hover:hover { border-color: var(--border-2) !important; }
@@ -299,10 +335,16 @@ button, input, textarea, select { font: inherit; }
 .dh-body {
   position: absolute; bottom: 18%; left: var(--pad); max-width: 540px; z-index: 1;
   display: flex; flex-direction: column; gap: 0.85rem;
-  opacity: 0; transform: translateY(14px);
-  transition: opacity 600ms 200ms ease, transform 600ms 200ms ease;
 }
-.dh-slide.is-active .dh-body { opacity: 1; transform: translateY(0); }
+.dh-type, .dh-title, .dh-desc, .dh-stats, .dh-actions {
+  opacity: 0; transform: translateY(18px);
+  transition: opacity 550ms cubic-bezier(0.22,1,0.36,1), transform 550ms cubic-bezier(0.22,1,0.36,1);
+}
+.dh-slide.is-active .dh-type    { opacity: 1; transform: translateY(0); transition-delay: 150ms; }
+.dh-slide.is-active .dh-title   { opacity: 1; transform: translateY(0); transition-delay: 250ms; }
+.dh-slide.is-active .dh-desc    { opacity: 1; transform: translateY(0); transition-delay: 350ms; }
+.dh-slide.is-active .dh-stats   { opacity: 1; transform: translateY(0); transition-delay: 430ms; }
+.dh-slide.is-active .dh-actions { opacity: 1; transform: translateY(0); transition-delay: 520ms; }
 .dh-type { display: flex; align-items: center; gap: 0.5rem; }
 .dh-title {
   font-family: var(--font-display); font-size: clamp(2.8rem, 6vw, 5.5rem);
@@ -353,10 +395,12 @@ button, input, textarea, select { font: inherit; }
 .ccc-track { display: flex; gap: 16px; transition: transform 450ms cubic-bezier(0.4, 0, 0.2, 1); will-change: transform; }
 .ccc-item {
   flex-shrink: 0; width: min(76vw, 920px); cursor: pointer;
-  transition: opacity 450ms ease, filter 450ms ease;
+  transition: opacity 450ms ease, filter 450ms ease, transform 350ms cubic-bezier(0.22,1,0.36,1);
   opacity: 0.38; filter: brightness(0.55) saturate(0.6);
 }
 .ccc-item.is-active { opacity: 1; filter: none; }
+.ccc-item.is-active:hover { transform: scale(1.02); }
+.ccc-item.is-active:hover .ccc-thumb { box-shadow: 0 32px 80px rgba(0,0,0,0.75); }
 .ccc-item.is-adjacent { opacity: 0.55; filter: brightness(0.72) saturate(0.75); }
 .ccc-thumb { position: relative; border-radius: var(--r-lg); overflow: hidden; aspect-ratio: 16/9; background: var(--card); }
 .ccc-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -431,8 +475,8 @@ button, input, textarea, select { font: inherit; }
   background: rgba(229,9,20,0.16); border: 1px solid rgba(229,9,20,0.28);
   font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: #ff6b76;
 }
-.trail-card-bottom { display: flex; flex-direction: column; gap: 0.5rem; transition: transform 380ms ease; }
-.trail-card:hover .trail-card-bottom { transform: translateY(-5px); }
+.trail-card-bottom { display: flex; flex-direction: column; gap: 0.5rem; transition: transform 400ms cubic-bezier(0.22,1,0.36,1); }
+.trail-card:hover .trail-card-bottom { transform: translateY(-8px); }
 .trail-card-bottom h3 { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.4px; line-height: 1.15; color: var(--text); }
 .trail-card-bottom > p { font-size: 0.75rem; color: var(--muted); }
 .trail-progress-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.25rem; }
