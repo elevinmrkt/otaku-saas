@@ -24,8 +24,8 @@ export default async function DesafioMensalPage() {
 
   const now = new Date()
   const startDate = challenge?.start_date ? new Date(challenge.start_date) : null
-  const daysPassed = startDate ? Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1 : 0
-  const currentDay = Math.min(daysPassed, challenge?.duration_days ?? 30)
+  const daysPassed = startDate ? Math.floor((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1 : 1
+  const currentDay = Math.max(1, Math.min(daysPassed, challenge?.duration_days ?? 30))
   const completedTasks = userProgress.filter(p => p.status === 'concluido').length
   const progressPct = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0
   const ringCircumference = 326.7

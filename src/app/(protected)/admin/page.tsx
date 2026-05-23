@@ -27,8 +27,8 @@ export default async function AdminDashboard() {
     supabase.from('users').select('*', { count: 'exact', head: true }).not('welcome_video_completed_at', 'is', null),
     supabase.from('users').select('*', { count: 'exact', head: true }).not('anamnesis_completed_at', 'is', null),
     supabase.from('content_items').select('*', { count: 'exact', head: true }).eq('status', 'publicado'),
-    supabase.from('challenges').select('*').eq('status', 'ativo').single(),
-    supabase.from('book_club_cycles').select('*').eq('status', 'ativo').single(),
+    supabase.from('challenges').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).maybeSingle(),
+    supabase.from('book_club_cycles').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).maybeSingle(),
     supabase.from('comments').select('*, users(nickname, name), content_items(title)').order('created_at', { ascending: false }).limit(5) as any,
     supabase.from('users').select('*', { count: 'exact', head: true }).eq('role', 'membro').lt('last_login_at', thirtyDaysAgo),
   ])
@@ -82,11 +82,14 @@ export default async function AdminDashboard() {
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <Flame size={14} color="var(--red)" />
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Desafio ativo</span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Desafio mensal</span>
             </div>
             {activeChallenge ? (
               <div>
-                <strong style={{ display: 'block', fontSize: '0.95rem', marginBottom: '0.25rem' }}>{activeChallenge.title}</strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <strong style={{ fontSize: '0.95rem' }}>{activeChallenge.title}</strong>
+                  <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 6px', borderRadius: '99px', background: activeChallenge.status === 'ativo' ? 'rgba(37,211,102,0.12)' : 'rgba(200,144,26,0.12)', color: activeChallenge.status === 'ativo' ? 'var(--green)' : 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{activeChallenge.status}</span>
+                </div>
                 <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>{activeChallenge.duration_days} dias</span>
                 <Link href="/admin/desafio" style={{ display: 'block', marginTop: '0.75rem', fontSize: '0.8rem', color: 'var(--red)', fontWeight: 700 }}>
                   Gerenciar →
@@ -103,11 +106,14 @@ export default async function AdminDashboard() {
           <div style={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--r)', padding: '1.25rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
               <BookMarked size={14} color="var(--gold)" />
-              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Clube ativo</span>
+              <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Clube da leitura</span>
             </div>
             {activeClub ? (
               <div>
-                <strong style={{ display: 'block', fontSize: '0.95rem', marginBottom: '0.25rem' }}>{activeClub.work_title}</strong>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                  <strong style={{ fontSize: '0.95rem' }}>{activeClub.work_title}</strong>
+                  <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 6px', borderRadius: '99px', background: activeClub.status === 'ativo' ? 'rgba(37,211,102,0.12)' : 'rgba(200,144,26,0.12)', color: activeClub.status === 'ativo' ? 'var(--green)' : 'var(--gold)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{activeClub.status}</span>
+                </div>
                 {activeClub.total_pages && (
                   <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>Página {activeClub.current_page ?? 0} / {activeClub.total_pages}</span>
                 )}
