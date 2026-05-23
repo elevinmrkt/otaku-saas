@@ -66,11 +66,34 @@ type CommentRow = {
 }
 type BookClubRow = {
   id: string; title: string; work_title: string; work_author: string | null
-  mockup_url: string | null; cover_url: string | null; summary: string | null
-  theme: string | null; total_pages: number | null; current_page: number | null
-  start_date: string | null; meeting_date: string | null; meeting_link: string | null
+  mockup_url: string | null; cover_url: string | null; banner_url: string | null; summary: string | null
+  headline: string | null; objective: string | null; theme: string | null
+  total_pages: number | null; current_page: number | null
+  start_date: string | null; end_date: string | null
+  meeting_date: string | null; meeting_link: string | null
+  meeting_description: string | null; meeting_recording_url: string | null
   whatsapp_group_url: string | null; status: 'ativo' | 'encerrado' | 'previsto'
+  current_week: number | null; week_question: string | null
+  xp_reward: number; badge_id: string | null
   created_at: string; updated_at: string
+}
+type ClubWeeklyGoalRow = {
+  id: string; cycle_id: string; week_number: number
+  title: string | null; page_start: number; page_end: number
+  theme: string | null; description: string | null; guide_question: string | null
+  created_at: string; updated_at: string
+}
+type ClubCycleMaterialRow = {
+  id: string; cycle_id: string; title: string
+  material_type: string; description: string | null; url: string | null
+  thumbnail_url: string | null; visibility: string
+  order_index: number; xp_reward: number; requires_reflection: boolean
+  created_at: string
+}
+type UserClubProgressRow = {
+  id: string; cycle_id: string; user_id: string
+  current_page: number; status: 'lendo' | 'concluido' | 'pausado'
+  joined_at: string; updated_at: string
 }
 type ChallengeRow = {
   id: string; title: string; slug: string; poster_url: string | null; headline: string | null
@@ -155,6 +178,9 @@ export type Database = {
       content_progress: { Row: ContentProgressRow; Insert: InsertOf<ContentProgressRow> & { user_id: string; content_item_id: string }; Update: Partial<ContentProgressRow>; Relationships: [] }
       comments: { Row: CommentRow; Insert: InsertOf<CommentRow> & { user_id: string; content_item_id: string; body: string }; Update: Partial<CommentRow>; Relationships: [] }
       book_club_cycles: { Row: BookClubRow; Insert: InsertOf<BookClubRow> & { title: string; work_title: string }; Update: Partial<BookClubRow>; Relationships: [] }
+      club_weekly_goals: { Row: ClubWeeklyGoalRow; Insert: InsertOf<ClubWeeklyGoalRow> & { cycle_id: string; week_number: number }; Update: Partial<ClubWeeklyGoalRow>; Relationships: [] }
+      club_cycle_materials: { Row: ClubCycleMaterialRow; Insert: InsertOf<ClubCycleMaterialRow> & { cycle_id: string; title: string }; Update: Partial<ClubCycleMaterialRow>; Relationships: [] }
+      user_club_progress: { Row: UserClubProgressRow; Insert: InsertOf<UserClubProgressRow> & { cycle_id: string; user_id: string }; Update: Partial<UserClubProgressRow>; Relationships: [] }
       challenges: { Row: ChallengeRow; Insert: InsertOf<ChallengeRow> & { title: string; slug: string }; Update: Partial<ChallengeRow>; Relationships: [] }
       challenge_tasks: { Row: ChallengeTaskRow; Insert: InsertOf<ChallengeTaskRow> & { challenge_id: string; title: string }; Update: Partial<ChallengeTaskRow>; Relationships: [] }
       user_challenge_progress: { Row: UserChallengeProgressRow; Insert: InsertOf<UserChallengeProgressRow> & { user_id: string; challenge_id: string; task_id: string }; Update: Partial<UserChallengeProgressRow>; Relationships: [] }

@@ -23,8 +23,12 @@ export default async function AdminClube({
 
   let editCycle = null
   if (acao === 'editar' && id) {
-    const { data } = await supabase.from('book_club_cycles').select('*').eq('id', id).single()
-    editCycle = data
+    const [{ data }, { data: weekly_goals }, { data: materials }] = await Promise.all([
+      supabase.from('book_club_cycles').select('*').eq('id', id).single(),
+      supabase.from('club_weekly_goals').select('*').eq('cycle_id', id).order('week_number'),
+      supabase.from('club_cycle_materials').select('*').eq('cycle_id', id).order('order_index'),
+    ])
+    editCycle = data ? { ...data, weekly_goals: weekly_goals ?? [], materials: materials ?? [] } : null
   }
   if (acao === 'novo' || editCycle) return <ClubForm cycle={editCycle} />
 
