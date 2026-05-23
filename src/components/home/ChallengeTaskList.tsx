@@ -63,6 +63,18 @@ export default function ChallengeTaskList({ challengeId, tasks, userProgress, cu
         reference_type: 'challenge_task',
         reference_id: task.id,
       })
+      const { error: rpcErr } = await (supabase as any).rpc('increment_user_xp', { p_user_id: user.id, p_xp: task.xp_reward })
+      if (rpcErr) {
+        const { data: existing } = await supabase.from('user_xp_summary').select('total_xp').eq('user_id', user.id).single()
+        await supabase.from('user_xp_summary').upsert({
+          user_id: user.id,
+          total_xp: (existing?.total_xp ?? 0) + task.xp_reward,
+          level: 1,
+          current_streak: 0,
+          last_activity_at: now,
+          updated_at: now,
+        }, { onConflict: 'user_id' })
+      }
     }
 
     setProgresses(p => ({ ...p, [task.id]: 'concluido' }))

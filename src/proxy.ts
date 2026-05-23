@@ -53,7 +53,8 @@ export async function proxy(request: NextRequest) {
       }
 
       if (!isAdminRoute) {
-        if (!profile.onboarding_completed_at && pathname !== '/onboarding') {
+        const onboardingFlow = ['/onboarding', '/boas-vindas', '/anamnese']
+        if (!profile.onboarding_completed_at && !onboardingFlow.includes(pathname)) {
           const url = request.nextUrl.clone()
           url.pathname = '/onboarding'
           return NextResponse.redirect(url)

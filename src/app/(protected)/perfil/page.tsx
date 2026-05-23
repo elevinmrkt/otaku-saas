@@ -41,13 +41,15 @@ export default async function PerfilPage() {
                 <div
                   style={{
                     width: '72px', height: '72px', borderRadius: '16px',
-                    background: 'var(--red)', flexShrink: 0,
+                    background: 'var(--red)', flexShrink: 0, overflow: 'hidden',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontFamily: 'var(--font-display)', fontSize: '2rem', color: 'white',
                     boxShadow: '0 4px 20px var(--red-glow)',
                   }}
                 >
-                  {profile?.avatar_char || (profile?.nickname || profile?.name || 'R').charAt(0).toUpperCase()}
+                  {profile?.avatar_url
+                    ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    : (profile?.avatar_char || (profile?.nickname || profile?.name || 'R').charAt(0).toUpperCase())}
                 </div>
                 <div style={{ flex: 1 }}>
                   <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', letterSpacing: '0.04em', lineHeight: 1, marginBottom: '0.25rem' }}>

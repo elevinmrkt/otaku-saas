@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { ContentItemWithAssets } from '@/types/database'
@@ -23,6 +23,8 @@ export default function ConteudoPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [completed, setCompleted] = useState(false)
+  const videoProgressRef = useRef(0)
+  const lastSavedPct = useRef(10)
 
   useEffect(() => {
     async function load() {
@@ -53,7 +55,7 @@ export default function ConteudoPage() {
           user_id: user.id,
           content_item_id: contentData.id,
           status: 'em_andamento',
-          progress_percent: 0,
+          progress_percent: 10,
           started_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -119,6 +121,45 @@ export default function ConteudoPage() {
 
     setCompleted(true)
     setSaving(false)
+  }
+
+  // Tracker de progresso por tempo (salva em marcos)
+  useEffect(() => {
+    if (!userId || !item || completed) return
+    const save = async (pct: number) => {
+      if (pct <= lastSavedPct.current) return
+      lastSavedPct.current = pct
+      await supabase.from('content_progress').upsert({
+        user_id: userId,
+        content_item_id: item.id,
+        status: 'em_andamento',
+        progress_percent: pct,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,content_item_id' })
+    }
+    const t1 = setTimeout(() => save(30), 60_000)
+    const t2 = setTimeout(() => save(55), 180_000)
+    const t3 = setTimeout(() => save(75), 420_000)
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, item?.id, completed])
+
+  // Tracker de vídeo HTML5
+  async function handleVideoTimeUpdate(e: React.SyntheticEvent<HTMLVideoElement>) {
+    const video = e.currentTarget
+    if (!video.duration || !userId || !item || completed) return
+    const pct = Math.min(Math.round((video.currentTime / video.duration) * 100), 95)
+    videoProgressRef.current = pct
+    if (pct >= lastSavedPct.current + 10) {
+      lastSavedPct.current = pct
+      await supabase.from('content_progress').upsert({
+        user_id: userId,
+        content_item_id: item.id,
+        status: 'em_andamento',
+        progress_percent: pct,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id,content_item_id' })
+    }
   }
 
   if (loading) {
@@ -192,6 +233,7 @@ export default function ConteudoPage() {
               src={videoAsset.url}
               style={{ width: '100%', display: 'block', maxHeight: '540px' }}
               poster={item.thumbnail_url ?? undefined}
+              onTimeUpdate={handleVideoTimeUpdate}
             >
               Seu navegador não suporta o player de vídeo.
             </video>
