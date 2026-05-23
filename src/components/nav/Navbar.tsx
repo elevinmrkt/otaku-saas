@@ -227,13 +227,15 @@ export default function Navbar({ profile, xpSummary, unreadCount }: NavbarProps)
             <div
               style={{
                 width: '28px', height: '28px',
-                background: 'var(--red)', borderRadius: '6px',
+                background: 'var(--red)', borderRadius: '6px', overflow: 'hidden',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontFamily: 'var(--font-display)', fontSize: '0.85rem',
-                color: 'white', fontWeight: 700,
+                color: 'white', fontWeight: 700, flexShrink: 0,
               }}
             >
-              {avatarChar}
+              {profile?.avatar_url
+                ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : avatarChar}
             </div>
             <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{displayName}</span>
             <ChevronDown size={12} color="var(--muted)" />
@@ -258,11 +260,15 @@ export default function Navbar({ profile, xpSummary, unreadCount }: NavbarProps)
                   <div
                     style={{
                       width: '40px', height: '40px',
-                      background: 'var(--red)', borderRadius: '10px',
+                      background: 'var(--red)', borderRadius: '10px', overflow: 'hidden',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'white',
+                      fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'white', flexShrink: 0,
                     }}
-                  >{avatarChar}</div>
+                  >
+                    {profile?.avatar_url
+                      ? <img src={profile.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : avatarChar}
+                  </div>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{displayName}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>
