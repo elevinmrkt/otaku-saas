@@ -126,14 +126,14 @@ export default async function AgendaPage({
     })),
   ]
 
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
   const filtered = activeType ? allEvents.filter(ev => ev.event_type === activeType) : allEvents
   const upcoming = filtered
     .filter(ev => ev.start_datetime >= now)
     .sort((a, b) => a.start_datetime.localeCompare(b.start_datetime))
   const past = filtered
-    .filter(ev => ev.start_datetime < now)
+    .filter(ev => ev.start_datetime < now && ev.start_datetime >= thirtyDaysAgo)
     .sort((a, b) => b.start_datetime.localeCompare(a.start_datetime))
-    .slice(0, 10)
 
   const isGCalConnected = !!(user.user_metadata?.google_calendar as any)?.access_token
 
@@ -281,7 +281,7 @@ export default async function AgendaPage({
       {past.length > 0 && (
         <section>
           <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', letterSpacing: '0.04em', marginBottom: '1rem', color: 'var(--muted)' }}>
-            Eventos passados
+            Eventos passados (últimos 30 dias)
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem' }}>
             {past.map(ev => <EventCard key={ev.id} ev={ev} isPast />)}
