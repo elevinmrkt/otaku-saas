@@ -67,6 +67,7 @@ export async function deleteMemberAction(memberId: string): Promise<string | nul
 
 const ALLOWED_STATUSES = ['ativo', 'inativo', 'bloqueado'] as const
 const ALLOWED_ROLES = ['membro', 'mentor', 'editor', 'suporte', 'admin'] as const
+const ALLOWED_PLANS = ['nenhum', 'mensal', 'protagonista'] as const
 
 export async function updateMemberStatusAction(memberId: string, status: string): Promise<string | null> {
   let caller: { userId: string }
@@ -91,6 +92,16 @@ export async function updateMemberRoleAction(memberId: string, role: string): Pr
   if (caller.userId === memberId) return 'Não é possível alterar o próprio papel.'
 
   const { error } = await admin.from('users').update({ role, updated_at: new Date().toISOString() }).eq('id', memberId)
+  if (error) return error.message
+  revalidatePath('/admin/membros')
+  return null
+}
+
+export async function updateMemberPlanAction(memberId: string, plan: string): Promise<string | null> {
+  try { await requireRole(['admin', 'suporte']) } catch (e: any) { return e.message }
+  if (!validateUuid(memberId)) return 'ID inválido.'
+  if (!(ALLOWED_PLANS as readonly string[]).includes(plan)) return 'Plano inválido.'
+  const { error } = await admin.from('users').update({ plan, updated_at: new Date().toISOString() }).eq('id', memberId)
   if (error) return error.message
   revalidatePath('/admin/membros')
   return null

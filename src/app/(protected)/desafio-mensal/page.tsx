@@ -1,16 +1,26 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Flame, CheckCircle, Users, Calendar, Video, Target, ChevronRight } from 'lucide-react'
+import { Flame, CheckCircle, Users, Calendar, Video, Lock, ChevronRight } from 'lucide-react'
 import ChallengeTaskList from '@/components/home/ChallengeTaskList'
+import { canAccess, PLAN_LABELS, PLAN_COLORS } from '@/lib/plans'
+import type { UserPlan, RequiredPlan } from '@/lib/plans'
 
 export default async function DesafioMensalPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
+  const { data: dbUser } = await supabase.from('users').select('plan, role').eq('id', user.id).single()
+  const userPlan = (dbUser?.plan ?? 'nenhum') as UserPlan
+  const isAdmin = ['admin', 'editor', 'mentor', 'suporte'].includes(dbUser?.role ?? '')
+
   const { data: challengeRows } = await supabase.from('challenges').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).limit(1) as any
   const challenge: any = (challengeRows as any[])?.[0] ?? null
   const { data: pastChallenges } = await supabase.from('challenges').select('*').eq('status', 'encerrado').order('end_date', { ascending: false }).limit(5)
+
+  const challengeRequiredPlan = (challenge?.required_plan ?? 'mensal') as RequiredPlan
+  const challengeLocked = challenge && !isAdmin && !canAccess(userPlan, challengeRequiredPlan)
+  const planColor = PLAN_COLORS[challengeRequiredPlan]
 
   let tasks: any[] = []
   let userProgress: any[] = []
@@ -34,7 +44,28 @@ export default async function DesafioMensalPage() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: '5rem' }}>
 
-      {challenge ? (
+      {challengeLocked ? (
+        <div style={{ maxWidth: '700px', margin: '0 auto', padding: 'var(--pad)', paddingTop: '4rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem', textAlign: 'center' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: planColor.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Lock size={28} color={planColor.color} />
+          </div>
+          <span className="label">Protocolo mensal</span>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2rem, 5vw, 3rem)', letterSpacing: '0.04em', lineHeight: 1 }}>
+            {challenge.title}
+          </h1>
+          {challenge.headline && (
+            <p style={{ color: 'var(--muted)', maxWidth: '420px', lineHeight: 1.7 }}>{challenge.headline}</p>
+          )}
+          <div style={{ marginTop: '1rem', padding: '1.25rem 2rem', background: 'var(--card)', border: `1px solid ${planColor.color}30`, borderRadius: 'var(--r)', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>Este desafio é exclusivo do</span>
+            <strong style={{ color: planColor.color, fontSize: '1.1rem' }}>Plano {PLAN_LABELS[challengeRequiredPlan]}</strong>
+            <span style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>Seu plano atual: {PLAN_LABELS[userPlan]}</span>
+          </div>
+          <p style={{ fontSize: '0.88rem', color: 'var(--muted)', marginTop: '0.5rem' }}>
+            Entre em contato com a equipe para fazer upgrade do seu plano.
+          </p>
+        </div>
+      ) : challenge ? (
         <>
           {/* Hero */}
           <div style={{ position: 'relative', minHeight: '380px', display: 'flex', alignItems: 'flex-end', overflow: 'hidden' }}>

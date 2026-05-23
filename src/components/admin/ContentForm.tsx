@@ -31,6 +31,7 @@ export default function ContentForm({ item, categories, trails }: Props) {
     poster_url: item?.poster_url ?? '',
     status: item?.status ?? 'rascunho',
     visibility: item?.visibility ?? 'publico',
+    required_plan: item?.required_plan ?? 'mensal',
     is_featured: item?.is_featured ?? false,
     is_new: item?.is_new ?? true,
     requires_reflection: item?.requires_reflection ?? false,
@@ -71,6 +72,7 @@ export default function ContentForm({ item, categories, trails }: Props) {
       poster_url: form.poster_url || null,
       status: form.status,
       visibility: form.visibility,
+      required_plan: form.required_plan,
       is_featured: form.is_featured,
       is_new: form.is_new,
       requires_reflection: form.requires_reflection,
@@ -156,8 +158,8 @@ export default function ContentForm({ item, categories, trails }: Props) {
           <textarea value={form.description} onChange={e => set('description', e.target.value)} placeholder="Descrição curta do conteúdo..." />
         </label>
 
-        {/* Tipo + Status + Visibilidade */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+        {/* Tipo + Status + Visibilidade + Plano */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '1rem' }}>
           <label className="field">
             Tipo de conteúdo *
             <select value={form.content_type} onChange={e => set('content_type', e.target.value)}>
@@ -182,6 +184,13 @@ export default function ContentForm({ item, categories, trails }: Props) {
             <select value={form.visibility} onChange={e => set('visibility', e.target.value)}>
               <option value="publico">Público</option>
               <option value="privado">Privado</option>
+            </select>
+          </label>
+          <label className="field">
+            Plano exigido
+            <select value={form.required_plan} onChange={e => set('required_plan', e.target.value)}>
+              <option value="mensal">Mensal</option>
+              <option value="protagonista">Protagonista</option>
             </select>
           </label>
         </div>

@@ -45,6 +45,7 @@ export default function ClubForm({ cycle }: { cycle?: any }) {
     summary: cycle?.summary ?? '',
     status: cycle?.status ?? 'previsto',
     xp_reward: cycle?.xp_reward ?? 100,
+    required_plan: cycle?.required_plan ?? 'mensal',
     start_date: cycle?.start_date ? cycle.start_date.split('T')[0] : '',
     end_date: cycle?.end_date ? cycle.end_date.split('T')[0] : '',
     whatsapp_group_url: cycle?.whatsapp_group_url ?? '',
@@ -181,8 +182,8 @@ export default function ClubForm({ cycle }: { cycle?: any }) {
             <label className="field">Resumo da obra<textarea value={form.summary} onChange={e => setForm(f => ({ ...f, summary: e.target.value }))} rows={4} /></label>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
               <label className="field">Status<select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}><option value="previsto">Previsto</option><option value="ativo">Ativo</option><option value="encerrado">Encerrado</option></select></label>
+              <label className="field">Plano exigido<select value={form.required_plan} onChange={e => setForm(f => ({ ...f, required_plan: e.target.value }))}><option value="mensal">Mensal</option><option value="protagonista">Protagonista</option></select></label>
               <label className="field">XP ao concluir<input type="number" value={form.xp_reward} onChange={e => setForm(f => ({ ...f, xp_reward: Number(e.target.value) }))} /></label>
-              <div />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <label className="field">Início<input type="date" value={form.start_date} onChange={e => setForm(f => ({ ...f, start_date: e.target.value }))} /></label>

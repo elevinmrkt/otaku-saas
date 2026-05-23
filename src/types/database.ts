@@ -1,5 +1,7 @@
 export type UserRole = 'membro' | 'admin' | 'editor' | 'mentor' | 'suporte'
 export type UserStatus = 'ativo' | 'inativo' | 'bloqueado'
+export type UserPlan = 'nenhum' | 'mensal' | 'protagonista'
+export type RequiredPlan = 'mensal' | 'protagonista'
 export type ContentType = 'video' | 'pdf' | 'audio' | 'podcast' | 'pagina' | 'gravacao'
 export type ContentStatus = 'rascunho' | 'publicado' | 'arquivado'
 export type GroupType = 'whatsapp' | 'telegram' | 'discord' | 'outro'
@@ -11,6 +13,7 @@ export type BadgeRuleType = 'manual' | 'automatico'
 type UsersRow = {
   id: string; name: string | null; nickname: string | null; email: string; phone: string | null
   avatar_url: string | null; avatar_char: string | null; role: UserRole; status: UserStatus
+  plan: UserPlan
   created_at: string; updated_at: string; last_login_at: string | null
   onboarding_completed_at: string | null; welcome_video_completed_at: string | null
   anamnesis_completed_at: string | null; accepted_terms_at: string | null
@@ -31,6 +34,7 @@ type TagRow = { id: string; title: string; slug: string; created_at: string }
 type TrailRow = {
   id: string; title: string; slug: string; description: string | null; poster_url: string | null
   thumbnail_url: string | null; status: ContentStatus; order_index: number
+  required_plan: RequiredPlan
   created_at: string; updated_at: string
 }
 type TrailModuleRow = {
@@ -41,6 +45,7 @@ type ContentItemRow = {
   id: string; title: string; slug: string; description: string | null; content_type: ContentType
   thumbnail_url: string | null; poster_url: string | null; category_id: string | null
   trail_id: string | null; status: ContentStatus; visibility: 'publico' | 'privado'
+  required_plan: RequiredPlan
   is_featured: boolean; is_new: boolean; requires_reflection: boolean; xp_reward: number
   published_at: string | null; scheduled_at: string | null; created_by: string | null
   created_at: string; updated_at: string
@@ -73,6 +78,7 @@ type BookClubRow = {
   meeting_date: string | null; meeting_link: string | null
   meeting_description: string | null; meeting_recording_url: string | null
   whatsapp_group_url: string | null; status: 'ativo' | 'encerrado' | 'previsto'
+  required_plan: RequiredPlan
   current_week: number | null; week_question: string | null
   xp_reward: number; badge_id: string | null
   created_at: string; updated_at: string
@@ -100,7 +106,7 @@ type ChallengeRow = {
   description: string | null; objective: string | null; duration_days: number
   start_date: string | null; end_date: string | null; meeting_date: string | null
   meeting_link: string | null; whatsapp_group_url: string | null
-  status: 'ativo' | 'encerrado' | 'previsto'; xp_reward: number; badge_id: string | null
+  status: 'ativo' | 'encerrado' | 'previsto'; xp_reward: number; required_plan: RequiredPlan; badge_id: string | null
   created_at: string; updated_at: string
 }
 type ChallengeTaskRow = {

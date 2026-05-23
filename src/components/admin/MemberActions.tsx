@@ -2,17 +2,19 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { deleteMemberAction, resendInviteAction, updateMemberStatusAction, updateMemberRoleAction } from '@/app/(protected)/admin/membros/actions'
-import type { UserRole, UserStatus } from '@/types/database'
+import { deleteMemberAction, resendInviteAction, updateMemberStatusAction, updateMemberRoleAction, updateMemberPlanAction } from '@/app/(protected)/admin/membros/actions'
+import type { UserRole, UserStatus, UserPlan } from '@/types/database'
+import { PLAN_LABELS } from '@/lib/plans'
 
 interface Props {
   memberId: string
   memberEmail: string
   currentStatus: UserStatus
   currentRole: UserRole
+  currentPlan: UserPlan
 }
 
-export default function MemberActions({ memberId, memberEmail, currentStatus, currentRole }: Props) {
+export default function MemberActions({ memberId, memberEmail, currentStatus, currentRole, currentPlan }: Props) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -32,6 +34,15 @@ export default function MemberActions({ memberId, memberEmail, currentStatus, cu
     setLoading(true)
     setOpen(false)
     const err = await updateMemberRoleAction(memberId, role)
+    setLoading(false)
+    if (err) { setFeedback(err); setTimeout(() => setFeedback(null), 4000); return }
+    router.refresh()
+  }
+
+  async function updatePlan(plan: UserPlan) {
+    setLoading(true)
+    setOpen(false)
+    const err = await updateMemberPlanAction(memberId, plan)
     setLoading(false)
     if (err) { setFeedback(err); setTimeout(() => setFeedback(null), 4000); return }
     router.refresh()
@@ -195,6 +206,27 @@ export default function MemberActions({ memberId, memberEmail, currentStatus, cu
                 onMouseLeave={e => (e.currentTarget.style.background = 'none')}
               >
                 Tornar {r}
+              </button>
+            ))}
+
+            <hr style={{ border: 'none', borderTop: '1px solid var(--border)', margin: '0.4rem 0' }} />
+
+            {/* Plan */}
+            <p style={{ fontSize: '0.68rem', color: 'var(--muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', padding: '0.3rem 0.5rem', marginBottom: '0.25rem' }}>Plano</p>
+            {(['nenhum', 'mensal', 'protagonista'] as UserPlan[]).filter(p => p !== currentPlan).map(p => (
+              <button
+                key={p}
+                onClick={() => updatePlan(p)}
+                style={{
+                  display: 'block', width: '100%', textAlign: 'left',
+                  padding: '0.5rem 0.75rem', borderRadius: '6px',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: '0.82rem', fontWeight: 600, color: 'var(--text)',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'var(--card-2)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'none')}
+              >
+                {PLAN_LABELS[p]}
               </button>
             ))}
 

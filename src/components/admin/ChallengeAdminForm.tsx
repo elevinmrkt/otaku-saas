@@ -26,6 +26,7 @@ export default function ChallengeAdminForm({ challenge }: { challenge?: any }) {
     poster_url: challenge?.poster_url ?? '',
     status: challenge?.status ?? 'previsto',
     xp_reward: challenge?.xp_reward ?? 100,
+    required_plan: challenge?.required_plan ?? 'mensal',
   })
   const [tasks, setTasks] = useState<Task[]>(challenge?.tasks ?? [])
   const [saving, setSaving] = useState(false)
@@ -69,9 +70,10 @@ export default function ChallengeAdminForm({ challenge }: { challenge?: any }) {
         <label className="field">Headline<input value={form.headline} onChange={e => setForm(f => ({ ...f, headline: e.target.value }))} placeholder="Frase de impacto" /></label>
         <label className="field">Descrição<textarea value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} /></label>
         <label className="field">Objetivo<textarea value={form.objective} onChange={e => setForm(f => ({ ...f, objective: e.target.value }))} /></label>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '1rem' }}>
           <label className="field">Duração (dias)<input type="number" min="1" value={form.duration_days} onChange={e => setForm(f => ({ ...f, duration_days: Number(e.target.value) }))} /></label>
           <label className="field">Status<select value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}><option value="previsto">Previsto</option><option value="ativo">Ativo</option><option value="encerrado">Encerrado</option></select></label>
+          <label className="field">Plano exigido<select value={form.required_plan} onChange={e => setForm(f => ({ ...f, required_plan: e.target.value }))}><option value="mensal">Mensal</option><option value="protagonista">Protagonista</option></select></label>
           <label className="field">XP ao concluir<input type="number" value={form.xp_reward} onChange={e => setForm(f => ({ ...f, xp_reward: Number(e.target.value) }))} /></label>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>

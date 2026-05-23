@@ -1,15 +1,24 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { BookOpen, Play, FileText, Headphones, ChevronRight } from 'lucide-react'
+import { BookOpen, Play, FileText, Headphones, ChevronRight, Lock } from 'lucide-react'
+import { canAccess, PLAN_LABELS, PLAN_COLORS } from '@/lib/plans'
+import type { UserPlan, RequiredPlan } from '@/lib/plans'
 
 export default async function TrilhaPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  const { data: dbUser } = await supabase.from('users').select('plan, role').eq('id', user!.id).single()
+  const userPlan = (dbUser?.plan ?? 'nenhum') as UserPlan
+  const isAdmin = ['admin', 'editor', 'mentor', 'suporte'].includes(dbUser?.role ?? '')
+
   const { data: trail } = await supabase.from('trails').select('*').eq('slug', slug).eq('status', 'publicado').single()
   if (!trail) notFound()
+
+  const requiredPlan = (trail.required_plan ?? 'mensal') as RequiredPlan
+  const locked = !isAdmin && !canAccess(userPlan, requiredPlan)
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: modules } = await (supabase
@@ -21,7 +30,7 @@ export default async function TrilhaPage({ params }: { params: Promise<{ slug: s
   const allContentIds = (modules as any[])?.flatMap((m: any) => m.trail_module_contents?.map((c: any) => c.content_items?.id).filter(Boolean) ?? []) ?? []
 
   const progressMap: Record<string, 'em_andamento' | 'concluido'> = {}
-  if (user && allContentIds.length > 0) {
+  if (user && allContentIds.length > 0 && !locked) {
     const { data: progs } = await supabase.from('content_progress').select('content_item_id, status').eq('user_id', user.id).in('content_item_id', allContentIds)
     progs?.forEach(p => { progressMap[p.content_item_id] = p.status as 'em_andamento' | 'concluido' })
   }
@@ -39,6 +48,8 @@ export default async function TrilhaPage({ params }: { params: Promise<{ slug: s
     gravacao: <Play size={14} />,
   }
 
+  const planColor = PLAN_COLORS[requiredPlan]
+
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', paddingBottom: '4rem' }}>
       {/* Hero */}
@@ -55,33 +66,65 @@ export default async function TrilhaPage({ params }: { params: Promise<{ slug: s
         )}
         <div style={{ position: 'relative', zIndex: 5, maxWidth: '560px' }}>
           <span className="label">Trilha de aprendizado</span>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', letterSpacing: '0.04em', lineHeight: 1, color: 'var(--text)', marginBottom: '0.75rem' }}>
-            {trail.title}
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+            <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.5rem, 5vw, 3.5rem)', letterSpacing: '0.04em', lineHeight: 1, color: 'var(--text)' }}>
+              {trail.title}
+            </h1>
+            <span style={{
+              padding: '0.25rem 0.65rem', borderRadius: '6px', flexShrink: 0,
+              fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em',
+              background: planColor.bg, color: planColor.color,
+            }}>
+              {PLAN_LABELS[requiredPlan]}
+            </span>
+          </div>
           {trail.description && (
             <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.95rem', lineHeight: 1.6, maxWidth: '440px', marginBottom: '1.25rem' }}>
               {trail.description}
             </p>
           )}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <div style={{ fontSize: '0.8rem', color: 'var(--muted)', fontWeight: 600 }}>
-              {totalContents} conteúdos · {completedContents} concluídos
-            </div>
-            {totalContents > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div className="prog-bar" style={{ width: '120px' }}>
-                  <div className="prog-fill" style={{ width: `${progressPct}%` }} />
-                </div>
-                <span style={{ fontSize: '0.78rem', color: 'var(--red)', fontWeight: 700 }}>{progressPct}%</span>
+          {!locked && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--muted)', fontWeight: 600 }}>
+                {totalContents} conteúdos · {completedContents} concluídos
               </div>
-            )}
-          </div>
+              {totalContents > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <div className="prog-bar" style={{ width: '120px' }}>
+                    <div className="prog-fill" style={{ width: `${progressPct}%` }} />
+                  </div>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--red)', fontWeight: 700 }}>{progressPct}%</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Modules */}
+      {/* Conteúdo */}
       <div style={{ padding: '0 var(--pad)', maxWidth: '900px' }}>
-        {modules && modules.length > 0 ? (
+        {locked ? (
+          <div style={{
+            background: 'var(--card)', border: `1px solid ${planColor.color}30`,
+            borderRadius: 'var(--r)', padding: '3rem 2rem', textAlign: 'center',
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem',
+          }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '50%', background: planColor.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <Lock size={24} color={planColor.color} />
+            </div>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', letterSpacing: '0.04em' }}>
+              Conteúdo exclusivo
+            </h2>
+            <p style={{ color: 'var(--muted)', maxWidth: '420px', lineHeight: 1.7, fontSize: '0.92rem' }}>
+              Esta trilha é exclusiva do{' '}
+              <strong style={{ color: planColor.color }}>Plano {PLAN_LABELS[requiredPlan]}</strong>.
+              Entre em contato com a equipe para fazer upgrade do seu plano.
+            </p>
+            <div style={{ marginTop: '0.5rem', padding: '0.85rem 1.5rem', background: planColor.bg, borderRadius: 'var(--r)', fontSize: '0.82rem', color: planColor.color, fontWeight: 700 }}>
+              Seu plano atual: {PLAN_LABELS[userPlan]}
+            </div>
+          </div>
+        ) : modules && modules.length > 0 ? (
           (modules as any[]).map((module: any) => (
             <div key={module.id} style={{ marginBottom: '2.5rem' }}>
               <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.4rem', letterSpacing: '0.03em', color: 'var(--text)', marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px solid var(--border)' }}>

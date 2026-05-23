@@ -16,6 +16,7 @@ export default function TrailForm({ trail }: { trail?: any }) {
     thumbnail_url: trail?.thumbnail_url ?? '',
     poster_url: trail?.poster_url ?? '',
     status: trail?.status ?? 'rascunho',
+    required_plan: trail?.required_plan ?? 'mensal',
     order_index: trail?.order_index ?? 0,
   })
   const [saving, setSaving] = useState(false)
@@ -112,13 +113,20 @@ export default function TrailForm({ trail }: { trail?: any }) {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
           <label className="field">
             Status
             <select value={form.status} onChange={e => set('status', e.target.value)}>
               <option value="rascunho">Rascunho</option>
               <option value="publicado">Publicado</option>
               <option value="arquivado">Arquivado</option>
+            </select>
+          </label>
+          <label className="field">
+            Plano exigido
+            <select value={form.required_plan} onChange={e => set('required_plan', e.target.value)}>
+              <option value="mensal">Plano Mensal</option>
+              <option value="protagonista">Plano Protagonista</option>
             </select>
           </label>
           <label className="field">

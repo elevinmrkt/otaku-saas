@@ -52,7 +52,8 @@ CREATE TABLE public.users (
   onboarding_completed_at TIMESTAMPTZ,
   welcome_video_completed_at TIMESTAMPTZ,
   anamnesis_completed_at TIMESTAMPTZ,
-  accepted_terms_at TIMESTAMPTZ
+  accepted_terms_at TIMESTAMPTZ,
+  plan TEXT NOT NULL DEFAULT 'nenhum' CHECK (plan IN ('nenhum', 'mensal', 'protagonista'))
 );
 
 -- Auto-create user profile on signup
@@ -139,6 +140,7 @@ CREATE TABLE public.trails (
   thumbnail_url TEXT,
   status TEXT NOT NULL DEFAULT 'rascunho' CHECK (status IN ('rascunho', 'publicado', 'arquivado')),
   order_index INTEGER DEFAULT 0,
+  required_plan TEXT NOT NULL DEFAULT 'mensal' CHECK (required_plan IN ('mensal', 'protagonista')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -167,6 +169,7 @@ CREATE TABLE public.content_items (
   trail_id UUID REFERENCES public.trails(id),
   status TEXT NOT NULL DEFAULT 'rascunho' CHECK (status IN ('rascunho', 'publicado', 'arquivado')),
   visibility TEXT NOT NULL DEFAULT 'publico' CHECK (visibility IN ('publico', 'privado')),
+  required_plan TEXT NOT NULL DEFAULT 'mensal' CHECK (required_plan IN ('mensal', 'protagonista')),
   is_featured BOOLEAN DEFAULT FALSE,
   is_new BOOLEAN DEFAULT TRUE,
   requires_reflection BOOLEAN DEFAULT FALSE,
@@ -245,6 +248,7 @@ CREATE TABLE public.book_club_cycles (
   meeting_link TEXT,
   whatsapp_group_url TEXT,
   status TEXT NOT NULL DEFAULT 'previsto' CHECK (status IN ('ativo', 'encerrado', 'previsto')),
+  required_plan TEXT NOT NULL DEFAULT 'mensal' CHECK (required_plan IN ('mensal', 'protagonista')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -266,6 +270,7 @@ CREATE TABLE public.challenges (
   whatsapp_group_url TEXT,
   status TEXT NOT NULL DEFAULT 'previsto' CHECK (status IN ('ativo', 'encerrado', 'previsto')),
   xp_reward INTEGER DEFAULT 100,
+  required_plan TEXT NOT NULL DEFAULT 'mensal' CHECK (required_plan IN ('mensal', 'protagonista')),
   badge_id UUID,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()

@@ -1,22 +1,27 @@
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { BookOpen, Filter } from 'lucide-react'
+import { BookOpen, Filter, Lock } from 'lucide-react'
+import { canAccess, PLAN_LABELS, PLAN_COLORS } from '@/lib/plans'
+import type { UserPlan, RequiredPlan } from '@/lib/plans'
 
 export default async function TrilhasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>
+  searchParams: Promise<{ q?: string }>
 }) {
-  const { q, status } = await searchParams
+  const { q } = await searchParams
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  const { data: dbUser } = await supabase.from('users').select('plan, role').eq('id', user!.id).single()
+  const userPlan = (dbUser?.plan ?? 'nenhum') as UserPlan
+  const isAdmin = ['admin', 'editor', 'mentor', 'suporte'].includes(dbUser?.role ?? '')
+
   let query = supabase.from('trails').select('*').eq('status', 'publicado').order('order_index')
   if (q) query = query.ilike('title', `%${q}%`)
-
   const { data: trails } = await query
 
-  // Busca progresso do usuário por trilha
+  // Progresso por trilha
   const progressMap: Record<string, number> = {}
   if (trails && user) {
     const trailIds = trails.map(t => t.id)
@@ -75,17 +80,12 @@ export default async function TrilhasPage({
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
             {trails.map(trail => {
               const prog = progressMap[trail.id] ?? 0
-              return (
-                <Link
-                  key={trail.id}
-                  href={`/trilhas/${trail.slug}`}
-                  className="card-lift"
-                  style={{
-                    background: 'var(--card)', border: '1px solid var(--border)',
-                    borderRadius: 'var(--r)', overflow: 'hidden',
-                    textDecoration: 'none', display: 'block',
-                  }}
-                >
+              const requiredPlan = (trail.required_plan ?? 'mensal') as RequiredPlan
+              const locked = !isAdmin && !canAccess(userPlan, requiredPlan)
+              const planColor = PLAN_COLORS[requiredPlan]
+
+              const cardContent = (
+                <>
                   <div style={{ position: 'relative', aspectRatio: '16/9', background: 'var(--card-2)' }}>
                     {trail.thumbnail_url ? (
                       <img src={trail.thumbnail_url} alt={trail.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -95,14 +95,40 @@ export default async function TrilhasPage({
                       </div>
                     )}
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%)' }} />
-                    {prog > 0 && (
+
+                    {/* Badge de plano */}
+                    <span style={{
+                      position: 'absolute', top: '0.6rem', right: '0.6rem',
+                      padding: '0.2rem 0.55rem', borderRadius: '4px',
+                      fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em',
+                      background: planColor.bg, color: planColor.color,
+                    }}>
+                      {PLAN_LABELS[requiredPlan]}
+                    </span>
+
+                    {!locked && prog > 0 && (
                       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px' }}>
                         <div style={{ height: '100%', width: `${prog}%`, background: 'var(--red)' }} />
                       </div>
                     )}
+
+                    {/* Overlay de bloqueio */}
+                    {locked && (
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        background: 'rgba(0,0,0,0.65)',
+                        display: 'flex', flexDirection: 'column',
+                        alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
+                      }}>
+                        <Lock size={24} color="rgba(255,255,255,0.7)" />
+                        <span style={{ fontSize: '0.72rem', color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>
+                          Faça upgrade para acessar
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div style={{ padding: '1.25rem' }}>
-                    <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', letterSpacing: '0.03em', color: 'var(--text)', marginBottom: '0.5rem' }}>
+                    <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.3rem', letterSpacing: '0.03em', color: locked ? 'var(--muted)' : 'var(--text)', marginBottom: '0.5rem' }}>
                       {trail.title}
                     </h3>
                     {trail.description && (
@@ -110,13 +136,31 @@ export default async function TrilhasPage({
                         {trail.description.slice(0, 80)}{trail.description.length > 80 ? '...' : ''}
                       </p>
                     )}
-                    {prog > 0 && (
+                    {!locked && prog > 0 && (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Progresso</span>
                         <span style={{ fontSize: '0.75rem', color: 'var(--red)', fontWeight: 700 }}>{prog}%</span>
                       </div>
                     )}
                   </div>
+                </>
+              )
+
+              const cardStyle = {
+                background: 'var(--card)', border: '1px solid var(--border)',
+                borderRadius: 'var(--r)', overflow: 'hidden',
+                textDecoration: 'none', display: 'block',
+                opacity: locked ? 0.85 : 1,
+                cursor: locked ? 'not-allowed' : undefined,
+              }
+
+              return locked ? (
+                <div key={trail.id} style={cardStyle}>
+                  {cardContent}
+                </div>
+              ) : (
+                <Link key={trail.id} href={`/trilhas/${trail.slug}`} className="card-lift" style={cardStyle}>
+                  {cardContent}
                 </Link>
               )
             })}
