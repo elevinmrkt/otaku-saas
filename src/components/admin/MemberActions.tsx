@@ -1,9 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { deleteMemberAction, resendInviteAction } from '@/app/(protected)/admin/membros/actions'
+import { deleteMemberAction, resendInviteAction, updateMemberStatusAction, updateMemberRoleAction } from '@/app/(protected)/admin/membros/actions'
 import type { UserRole, UserStatus } from '@/types/database'
 
 interface Props {
@@ -14,7 +13,6 @@ interface Props {
 }
 
 export default function MemberActions({ memberId, memberEmail, currentStatus, currentRole }: Props) {
-  const supabase = createClient()
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -23,17 +21,19 @@ export default function MemberActions({ memberId, memberEmail, currentStatus, cu
 
   async function updateStatus(status: UserStatus) {
     setLoading(true)
-    await supabase.from('users').update({ status, updated_at: new Date().toISOString() }).eq('id', memberId)
     setOpen(false)
+    const err = await updateMemberStatusAction(memberId, status)
     setLoading(false)
+    if (err) { setFeedback(err); setTimeout(() => setFeedback(null), 4000); return }
     router.refresh()
   }
 
   async function updateRole(role: UserRole) {
     setLoading(true)
-    await supabase.from('users').update({ role, updated_at: new Date().toISOString() }).eq('id', memberId)
     setOpen(false)
+    const err = await updateMemberRoleAction(memberId, role)
     setLoading(false)
+    if (err) { setFeedback(err); setTimeout(() => setFeedback(null), 4000); return }
     router.refresh()
   }
 

@@ -11,8 +11,14 @@ const admin = createSupabaseAdmin(SUPABASE_URL, SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 function validateEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254
+}
+
+function validateUuid(id: string): boolean {
+  return typeof id === 'string' && UUID_RE.test(id)
 }
 
 export async function createMemberAction(formData: FormData): Promise<string | null> {
@@ -40,11 +46,11 @@ export async function createMemberAction(formData: FormData): Promise<string | n
 }
 
 export async function deleteMemberAction(memberId: string): Promise<string | null> {
-  try { await requireRole(['admin']) } catch (e: any) { return e.message }
+  let caller: { userId: string }
+  try { caller = await requireRole(['admin']) } catch (e: any) { return e.message }
 
-  if (!memberId || typeof memberId !== 'string' || memberId.length !== 36) {
-    return 'ID inválido.'
-  }
+  if (!validateUuid(memberId)) return 'ID inválido.'
+  if (caller.userId === memberId) return 'Não é possível excluir a própria conta.'
 
   await admin.from('content_progress').delete().eq('user_id', memberId)
   await admin.from('comments').delete().eq('user_id', memberId)
@@ -59,18 +65,40 @@ export async function deleteMemberAction(memberId: string): Promise<string | nul
   return null
 }
 
+const ALLOWED_STATUSES = ['ativo', 'inativo', 'bloqueado'] as const
+const ALLOWED_ROLES = ['membro', 'mentor', 'editor', 'suporte', 'admin'] as const
+
+export async function updateMemberStatusAction(memberId: string, status: string): Promise<string | null> {
+  let caller: { userId: string }
+  try { caller = await requireRole(['admin', 'suporte']) } catch (e: any) { return e.message }
+
+  if (!validateUuid(memberId)) return 'ID inválido.'
+  if (!(ALLOWED_STATUSES as readonly string[]).includes(status)) return 'Status inválido.'
+  if (caller.userId === memberId) return 'Não é possível alterar o próprio status.'
+
+  const { error } = await admin.from('users').update({ status, updated_at: new Date().toISOString() }).eq('id', memberId)
+  if (error) return error.message
+  revalidatePath('/admin/membros')
+  return null
+}
+
+export async function updateMemberRoleAction(memberId: string, role: string): Promise<string | null> {
+  let caller: { userId: string }
+  try { caller = await requireRole(['admin']) } catch (e: any) { return e.message }
+
+  if (!validateUuid(memberId)) return 'ID inválido.'
+  if (!(ALLOWED_ROLES as readonly string[]).includes(role)) return 'Papel inválido.'
+  if (caller.userId === memberId) return 'Não é possível alterar o próprio papel.'
+
+  const { error } = await admin.from('users').update({ role, updated_at: new Date().toISOString() }).eq('id', memberId)
+  if (error) return error.message
+  revalidatePath('/admin/membros')
+  return null
+}
+
 export async function resendInviteAction(email: string): Promise<{ link: string } | string> {
   try { await requireRole(['admin', 'suporte']) } catch (e: any) { return e.message }
-
   if (!validateEmail(email)) return 'E-mail inválido.'
-
-  const { data, error } = await admin.auth.admin.generateLink({
-    type: 'recovery',
-    email,
-  })
-  if (error) return error.message
-
-  const tokenHash = (data.properties as any).hashed_token
-  const link = `https://otaku-saas.vercel.app/atualizar-senha?token_hash=${tokenHash}&type=recovery`
-  return { link }
+  // Member must initiate recovery from their browser for PKCE to work
+  return { link: `https://otaku-saas.vercel.app/recuperar-senha` }
 }
