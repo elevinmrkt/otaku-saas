@@ -4,7 +4,9 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { ContentItemWithAssets } from '@/types/database'
-import { CheckCircle, ArrowLeft, Zap } from 'lucide-react'
+import { CheckCircle, ArrowLeft, Zap, Lock } from 'lucide-react'
+import { canAccess, PLAN_LABELS, PLAN_COLORS } from '@/lib/plans'
+import type { UserPlan, RequiredPlan } from '@/lib/plans'
 function sanitizeHtml(html: string): string {
   return html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
@@ -23,6 +25,9 @@ export default function ConteudoPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [completed, setCompleted] = useState(false)
+  const [locked, setLocked] = useState(false)
+  const [userPlan, setUserPlan] = useState<string>('nenhum')
+  const [contentRequiredPlan, setContentRequiredPlan] = useState<string>('mensal')
   const videoProgressRef = useRef(0)
   const lastSavedPct = useRef(10)
 
@@ -40,6 +45,20 @@ export default function ConteudoPage() {
         .single() as any)
 
       if (!contentData) { router.push('/home'); return }
+
+      // Verificação de plano
+      const { data: dbUser } = await supabase.from('users').select('plan, role').eq('id', user.id).single()
+      const uPlan = (dbUser?.plan ?? 'nenhum') as UserPlan
+      const isAdmin = ['admin', 'editor', 'mentor', 'suporte'].includes(dbUser?.role ?? '')
+      const rPlan = (contentData.required_plan ?? 'mensal') as RequiredPlan
+      setUserPlan(uPlan)
+      setContentRequiredPlan(rPlan)
+      if (!isAdmin && !canAccess(uPlan, rPlan)) {
+        setLocked(true)
+        setLoading(false)
+        return
+      }
+
       setItem(contentData as ContentItemWithAssets)
 
       const { data: progData } = await supabase
@@ -166,6 +185,35 @@ export default function ConteudoPage() {
     return (
       <div style={{ minHeight: '100vh', background: 'var(--bg)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ color: 'var(--muted)', fontSize: '0.9rem' }}>Carregando...</div>
+      </div>
+    )
+  }
+
+  if (locked) {
+    const planColor = PLAN_COLORS[contentRequiredPlan] ?? PLAN_COLORS.mensal
+    return (
+      <div style={{ background: 'var(--bg)', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 'var(--pad)', gap: '1rem', textAlign: 'center' }}>
+        <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: planColor.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Lock size={28} color={planColor.color} />
+        </div>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', letterSpacing: '0.04em' }}>
+          Conteúdo exclusivo
+        </h1>
+        <p style={{ color: 'var(--muted)', maxWidth: '400px', lineHeight: 1.7, fontSize: '0.92rem' }}>
+          Este conteúdo é exclusivo do{' '}
+          <strong style={{ color: planColor.color }}>Plano {PLAN_LABELS[contentRequiredPlan]}</strong>.
+          Entre em contato com a equipe para fazer upgrade do seu plano.
+        </p>
+        <div style={{ padding: '0.85rem 1.5rem', background: planColor.bg, borderRadius: 'var(--r)', fontSize: '0.82rem', color: planColor.color, fontWeight: 700 }}>
+          Seu plano atual: {PLAN_LABELS[userPlan]}
+        </div>
+        <button
+          onClick={() => router.back()}
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--muted)', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, marginTop: '0.5rem' }}
+        >
+          <ArrowLeft size={16} />
+          Voltar
+        </button>
       </div>
     )
   }
