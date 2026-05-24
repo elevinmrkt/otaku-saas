@@ -5,6 +5,7 @@ import { getLevelFromXP } from '@/types/database'
 import HeroSlideshow from '@/components/home/HeroSlideshow'
 import CCCCarousel from '@/components/home/CCCCarousel'
 import ContentShelf from '@/components/home/ContentShelf'
+import TrailsCarousel from '@/components/home/TrailsCarousel'
 import { BookOpen, Flame, Users, Calendar } from 'lucide-react'
 
 export default async function HomePage() {
@@ -161,55 +162,7 @@ export default async function HomePage() {
 
       {/* ── Trilhas ── */}
       {trails && trails.length > 0 && (
-        <section className="content-section trails-section" id="trilhas">
-          <div className="section-head inline">
-            <div>
-              <span className="label">Jornadas de conhecimento</span>
-              <h2>Trilhas de aprendizado</h2>
-            </div>
-            <Link href="/trilhas" style={{ fontSize: '0.82rem', color: 'var(--muted)', fontWeight: 600 }}>
-              Ver todas →
-            </Link>
-          </div>
-          <div className="trails-4">
-            {trails.slice(0, 4).map((trail, i) => {
-              const prog = trailProgressMap[trail.id] ?? 0
-              return (
-                <Link key={trail.id} href={`/trilhas/${trail.slug}`} className="trail-card">
-                  <div className="trail-card-bg">
-                    {trail.thumbnail_url
-                      ? <img src={trail.thumbnail_url} alt={trail.title} />
-                      : <div style={{ width: '100%', height: '100%', background: `linear-gradient(135deg, hsl(${i * 60},40%,10%) 0%, #0a0a0a 100%)` }} />
-                    }
-                  </div>
-                  <div className="trail-card-body">
-                    <div className="trail-card-top">
-                      <span className="trail-label">Trilha {String(i + 1).padStart(2, '0')}</span>
-                      {trail.status === 'publicado' && prog === 0 && (
-                        <span className="trail-new-badge">Começar</span>
-                      )}
-                    </div>
-                    <div className="trail-card-bottom">
-                      <h3>{trail.title}</h3>
-                      {trail.description && (
-                        <p>{trail.description.slice(0, 70)}{trail.description.length > 70 ? '...' : ''}</p>
-                      )}
-                      {prog > 0 && (
-                        <div className="trail-progress-row">
-                          <div className="trail-prog-bar">
-                            <div className="trail-prog-fill" style={{ width: `${prog}%` }} />
-                          </div>
-                          <span>{prog}%</span>
-                        </div>
-                      )}
-                      <span className="trail-cta">{prog > 0 ? 'Continuar trilha →' : 'Iniciar trilha →'}</span>
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        </section>
+        <TrailsCarousel trails={trails} progressMap={trailProgressMap} />
       )}
 
       {/* ── Novidades ── */}
