@@ -50,12 +50,11 @@ export default function Navbar({ profile, xpSummary, unreadCount }: NavbarProps)
   }
 
   const navLinks = [
-    { href: '/home', label: 'Início' },
+    { href: '/home', label: 'Home' },
     { href: '/trilhas', label: 'Trilhas' },
-    { href: '/clube-da-leitura', label: 'Clube' },
-    { href: '/desafio-mensal', label: 'Desafio' },
+    { href: '/biblioteca', label: 'Biblioteca' },
+    { href: '/desafio-mensal', label: 'Desafio Mensal' },
     { href: '/agenda', label: 'Agenda' },
-    { href: '/comunidade', label: 'Comunidade' },
   ]
 
   return (
@@ -72,45 +71,48 @@ export default function Navbar({ profile, xpSummary, unreadCount }: NavbarProps)
         gap: '2rem',
       }}
     >
-      {/* Brand */}
-      <Link
-        href="/home"
-        style={{
-          display: 'flex', alignItems: 'center', gap: '0.6rem',
-          textDecoration: 'none', flexShrink: 0,
-        }}
-      >
-        <span
+      {/* Brand — ocupa metade esquerda */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+        <Link
+          href="/home"
           style={{
-            width: '32px', height: '32px',
-            background: 'var(--red)',
-            borderRadius: '7px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: 'var(--font-display)',
-            fontSize: '0.95rem', color: 'white',
-            boxShadow: '0 2px 8px var(--red-glow)',
-            flexShrink: 0,
+            display: 'flex', alignItems: 'center', gap: '0.6rem',
+            textDecoration: 'none', flexShrink: 0,
           }}
-        >OE</span>
-        <strong style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', letterSpacing: '0.05em', color: 'var(--text)' }}>
-          Otaku Estóico
-        </strong>
-      </Link>
+        >
+          <span
+            style={{
+              width: '32px', height: '32px',
+              background: 'var(--red)',
+              borderRadius: '7px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontFamily: 'var(--font-display)',
+              fontSize: '0.95rem', color: 'white',
+              boxShadow: '0 2px 8px var(--red-glow)',
+              flexShrink: 0,
+            }}
+          >OE</span>
+          <strong style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', letterSpacing: '0.05em', color: 'var(--text)' }}>
+            Otaku Estóico
+          </strong>
+        </Link>
+      </div>
 
-      {/* Nav links — desktop only */}
-      <div className="nav-links-desktop" style={{ display: 'flex', gap: '0.25rem', flex: 1 }}>
+      {/* Nav links — centralizados */}
+      <div className="nav-links-desktop" style={{ display: 'flex', gap: '0.15rem', alignItems: 'center' }}>
         {navLinks.map(link => (
           <Link
             key={link.href}
             href={link.href}
             style={{
               padding: '0.4rem 0.75rem',
-              fontSize: '0.85rem', fontWeight: 600,
+              fontSize: '0.83rem', fontWeight: 600,
               color: pathname.startsWith(link.href) ? 'var(--text)' : 'var(--muted)',
               borderRadius: '6px',
               background: pathname.startsWith(link.href) ? 'rgba(255,255,255,0.07)' : 'transparent',
               transition: 'all 150ms',
               textDecoration: 'none',
+              whiteSpace: 'nowrap',
             }}
           >
             {link.label}
@@ -118,8 +120,8 @@ export default function Navbar({ profile, xpSummary, unreadCount }: NavbarProps)
         ))}
       </div>
 
-      {/* Right side */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0, marginLeft: 'auto' }}>
+      {/* Right side — ocupa metade direita */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end' }}>
         {/* Hamburger — mobile only */}
         <button
           className="nav-hamburger"
