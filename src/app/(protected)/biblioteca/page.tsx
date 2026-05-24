@@ -91,11 +91,13 @@ export default async function BibliotecaPage({
                   display: 'flex', flexDirection: 'column',
                 }}
               >
-                <div style={{ aspectRatio: '3/4', background: 'var(--card-2)', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div style={{ position: 'relative', width: '100%', aspectRatio: '3/4', flexShrink: 0, background: 'var(--card-2)', overflow: 'hidden' }}>
                   {item.thumbnail_url ? (
-                    <img src={item.thumbnail_url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={item.thumbnail_url} alt={item.title} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                   ) : (
-                    <div style={{ color: 'var(--muted)', opacity: 0.3 }}>{ICON[item.content_type] ?? <BookOpen size={20} />}</div>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--muted)', opacity: 0.3 }}>
+                      {ICON[item.content_type] ?? <BookOpen size={20} />}
+                    </div>
                   )}
                 </div>
                 <div style={{ padding: '0.85rem' }}>
