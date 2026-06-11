@@ -1,16 +1,16 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import Navbar from '@/components/nav/Navbar'
-import { getAuthUser, getProfile, getXpSummary } from '@/lib/supabase/queries'
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
-  const user = await getAuthUser()
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
   if (!user) redirect('/login')
 
-  const supabase = await createClient()
-  const [profile, xpSummary, { count: unreadCount }] = await Promise.all([
-    getProfile(user.id),
-    getXpSummary(user.id),
+  const [{ data: profile }, { data: xpSummary }, { count: unreadCount }] = await Promise.all([
+    supabase.from('users').select('*').eq('id', user.id).single(),
+    supabase.from('user_xp_summary').select('*').eq('user_id', user.id).single(),
     supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false),
   ])
 
