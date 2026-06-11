@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { loginAction } from './actions'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -13,23 +15,21 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     const form = new FormData(e.currentTarget)
-    try {
-      const result = await loginAction(
-        form.get('email') as string,
-        form.get('password') as string
-      )
-      if (result) {
-        if (result.toLowerCase().includes('email not confirmed')) {
-          setError('E-mail não confirmado. Verifique sua caixa de entrada e clique no link de confirmação.')
-        } else if (result.toLowerCase().includes('invalid login credentials') || result.toLowerCase().includes('invalid email or password')) {
-          setError('E-mail ou senha inválidos. Verifique seus dados.')
-        } else {
-          setError(result)
-        }
-        setLoading(false)
+    const result = await loginAction(
+      form.get('email') as string,
+      form.get('password') as string
+    )
+    if (result) {
+      if (result.toLowerCase().includes('email not confirmed')) {
+        setError('E-mail não confirmado. Verifique sua caixa de entrada e clique no link de confirmação.')
+      } else if (result.toLowerCase().includes('invalid login credentials') || result.toLowerCase().includes('invalid email or password')) {
+        setError('E-mail ou senha inválidos. Verifique seus dados.')
+      } else {
+        setError(result)
       }
-    } catch {
       setLoading(false)
+    } else {
+      router.push('/home')
     }
   }
 
