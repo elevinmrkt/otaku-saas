@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getAuthUser, getProfile, getXpSummary } from '@/lib/supabase/queries'
 import Link from 'next/link'
 import { getLevelFromXP } from '@/types/database'
 import HeroSlideshow from '@/components/home/HeroSlideshow'
@@ -9,13 +10,14 @@ import TrailsCarousel from '@/components/home/TrailsCarousel'
 import { BookOpen, Flame, Users, Calendar } from 'lucide-react'
 
 export default async function HomePage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getAuthUser()
   if (!user) redirect('/login')
 
+  const supabase = await createClient()
+
   const [
-    { data: profile },
-    { data: xpSummary },
+    profile,
+    xpSummary,
     { data: featuredContent },
     { data: inProgress },
     { data: recentContent },
@@ -25,16 +27,32 @@ export default async function HomePage() {
     { data: groups },
     { data: upcomingEvents },
   ] = await Promise.all([
-    supabase.from('users').select('*').eq('id', user.id).single(),
-    supabase.from('user_xp_summary').select('*').eq('user_id', user.id).single(),
-    supabase.from('content_items').select('*, media_assets(*)').eq('status', 'publicado').eq('is_featured', true).limit(5) as any,
-    supabase.from('content_progress').select('*, content_items(id, title, slug, content_type, thumbnail_url, description)').eq('user_id', user.id).eq('status', 'em_andamento').order('updated_at', { ascending: false }).limit(6) as any,
-    supabase.from('content_items').select('*, media_assets(*), categories(title, slug)').eq('status', 'publicado').order('published_at', { ascending: false }).limit(12) as any,
-    supabase.from('trails').select('*').eq('status', 'publicado').order('order_index').limit(8),
-    supabase.from('challenges').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).limit(1) as any,
-    supabase.from('book_club_cycles').select('*').in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).limit(1) as any,
-    supabase.from('community_groups').select('*').eq('status', 'ativo').order('created_at').limit(3),
-    supabase.from('events').select('*').eq('status', 'agendado').order('start_datetime').limit(3),
+    getProfile(user.id),
+    getXpSummary(user.id),
+    supabase.from('content_items')
+      .select('id, title, slug, content_type, thumbnail_url, poster_url, description, xp_reward, is_new')
+      .eq('status', 'publicado').eq('is_featured', true).limit(5) as any,
+    supabase.from('content_progress')
+      .select('id, progress_percent, content_items(id, title, slug, content_type, thumbnail_url, description)')
+      .eq('user_id', user.id).eq('status', 'em_andamento').order('updated_at', { ascending: false }).limit(6) as any,
+    supabase.from('content_items')
+      .select('id, title, slug, content_type, thumbnail_url, description, is_new, published_at')
+      .eq('status', 'publicado').order('published_at', { ascending: false }).limit(12) as any,
+    supabase.from('trails')
+      .select('id, title, slug, description, thumbnail_url, order_index')
+      .eq('status', 'publicado').order('order_index').limit(8),
+    supabase.from('challenges')
+      .select('id, title, description, poster_url, duration_days, start_date, status')
+      .in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).limit(1) as any,
+    supabase.from('book_club_cycles')
+      .select('id, theme, work_title, work_author, summary, total_pages, current_page, meeting_date, mockup_url, cover_url')
+      .in('status', ['ativo', 'previsto']).order('created_at', { ascending: false }).limit(1) as any,
+    supabase.from('community_groups')
+      .select('id, title, description, group_type, whatsapp_url, telegram_url, poster_url')
+      .eq('status', 'ativo').order('created_at').limit(3),
+    supabase.from('events')
+      .select('id, title, start_datetime, meeting_url')
+      .eq('status', 'agendado').order('start_datetime').limit(3),
   ])
 
   const activeChallenge: any = (challengeRows as any[])?.[0] ?? null
