@@ -13,22 +13,12 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
     const form = new FormData(e.currentTarget)
-    try {
-      const result = await loginAction(
-        form.get('email') as string,
-        form.get('password') as string
-      )
-      if (result) {
-        if (result.toLowerCase().includes('email not confirmed')) {
-          setError('E-mail não confirmado. Verifique sua caixa de entrada e clique no link de confirmação.')
-        } else if (result.toLowerCase().includes('invalid login credentials') || result.toLowerCase().includes('invalid email or password')) {
-          setError('E-mail ou senha inválidos. Verifique seus dados.')
-        } else {
-          setError(result)
-        }
-        setLoading(false)
-      }
-    } catch {
+    const result = await loginAction(
+      form.get('email') as string,
+      form.get('password') as string
+    )
+    if (result) {
+      setError('E-mail ou senha inválidos. Verifique seus dados.')
       setLoading(false)
     }
   }
