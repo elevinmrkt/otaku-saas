@@ -33,6 +33,7 @@ export default function ClubForm({ cycle }: { cycle?: any }) {
   const supabase = createClient()
   const [activeTab, setActiveTab] = useState<Tab>('info')
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   const [form, setForm] = useState({
     // Tab 1 — Informações
@@ -92,6 +93,7 @@ export default function ClubForm({ cycle }: { cycle?: any }) {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setSaveError('')
 
     const data = {
       ...form,
@@ -103,30 +105,50 @@ export default function ClubForm({ cycle }: { cycle?: any }) {
     }
 
     let cycleId = cycle?.id
+
     if (cycle) {
-      await supabase.from('book_club_cycles').update(data).eq('id', cycle.id)
+      const { error } = await supabase.from('book_club_cycles').update(data).eq('id', cycle.id)
+      if (error) {
+        setSaveError('Erro ao salvar: ' + error.message)
+        setSaving(false)
+        return
+      }
     } else {
-      const { data: created } = await supabase
+      const { data: created, error } = await supabase
         .from('book_club_cycles')
         .insert({ ...data, created_at: new Date().toISOString() })
         .select('id').single()
-      cycleId = created?.id
+      if (error || !created) {
+        setSaveError('Erro ao criar ciclo: ' + (error?.message ?? 'Tente novamente.'))
+        setSaving(false)
+        return
+      }
+      cycleId = created.id
     }
 
     if (cycleId) {
-      // Save weekly goals
       await supabase.from('club_weekly_goals').delete().eq('cycle_id', cycleId)
       if (weeklyGoals.length > 0) {
-        await supabase.from('club_weekly_goals').insert(
+        const { error } = await supabase.from('club_weekly_goals').insert(
           weeklyGoals.map(g => ({ ...g, cycle_id: cycleId, page_start: Number(g.page_start), page_end: Number(g.page_end), week_number: Number(g.week_number), created_at: new Date().toISOString(), updated_at: new Date().toISOString() }))
         )
+        if (error) {
+          setSaveError('Ciclo salvo, mas erro nas metas semanais: ' + error.message)
+          setSaving(false)
+          return
+        }
       }
-      // Save materials
+
       await supabase.from('club_cycle_materials').delete().eq('cycle_id', cycleId)
       if (materials.length > 0) {
-        await supabase.from('club_cycle_materials').insert(
+        const { error } = await supabase.from('club_cycle_materials').insert(
           materials.map((m, i) => ({ ...m, cycle_id: cycleId, order_index: i, xp_reward: Number(m.xp_reward), created_at: new Date().toISOString() }))
         )
+        if (error) {
+          setSaveError('Ciclo salvo, mas erro nos materiais: ' + error.message)
+          setSaving(false)
+          return
+        }
       }
     }
 
@@ -311,6 +333,13 @@ export default function ClubForm({ cycle }: { cycle?: any }) {
               </div>
             ))}
           </>
+        )}
+
+        {/* ─── Erro de salvamento ─── */}
+        {saveError && (
+          <div style={{ padding: '0.75rem 1rem', background: 'rgba(229,9,20,0.08)', border: '1px solid rgba(229,9,20,0.3)', borderRadius: 'var(--r)', fontSize: '0.85rem', color: '#ff6b6b' }}>
+            {saveError}
+          </div>
         )}
 
         {/* ─── Botões de ação ─── */}
