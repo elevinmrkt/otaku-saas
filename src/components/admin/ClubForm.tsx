@@ -97,6 +97,9 @@ export default function ClubForm({ cycle }: { cycle?: any }) {
 
     const data = {
       ...form,
+      start_date: form.start_date || null,
+      end_date: form.end_date || null,
+      meeting_date: form.meeting_date || null,
       total_pages: form.total_pages ? Number(form.total_pages) : null,
       current_page: Number(form.current_page),
       current_week: Number(form.current_week),
